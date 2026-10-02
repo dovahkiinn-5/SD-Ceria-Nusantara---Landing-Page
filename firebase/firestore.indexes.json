@@ -1,0 +1,9 @@
+{
+  "indexes": [],
+  "fieldOverrides": [
+    { "collectionGroup": "applications", "fieldPath": "child", "indexes": [] },
+    { "collectionGroup": "applications", "fieldPath": "parent", "indexes": [] },
+    { "collectionGroup": "applications", "fieldPath": "documents", "indexes": [] },
+    { "collectionGroup": "admins", "fieldPath": "password", "indexes": [] }
+  ]
+}

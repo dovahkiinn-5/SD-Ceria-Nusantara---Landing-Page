@@ -1,0 +1,2 @@
+<?php
+return ['child_name'=>'Nama lengkap anak','nickname'=>'Nama panggilan','birth_date'=>'Tanggal lahir','gender'=>'Jenis kelamin','previous_school'=>'Asal sekolah / PAUD','support_needs'=>'Kebutuhan pendampingan','parent_name'=>'Nama orang tua / wali','relationship'=>'Hubungan dengan anak','phone'=>'Nomor WhatsApp','email'=>'Alamat email','address'=>'Alamat domisili','emergency_contact'=>'Kontak darurat'];

@@ -1,0 +1,3 @@
+@extends('layouts.admin')
+@section('title','Masuk ke Panel Admin')
+@section('content')<form class="admin-panel login-panel" method="post" action="{{ route('login.submit') }}">@csrf<img class="login-logo" src="/assets/design/asset-02.png" width="80" height="80" alt="Logo SD Ceria Nusantara"><label>Email admin<input name="email" value="{{ old('email') }}" type="email" autocomplete="username" required autofocus></label><label>Kata sandi<input name="password" type="password" autocomplete="current-password" required></label><button class="button blue" type="submit">Masuk</button><a class="text-link" href="{{ route('home') }}">← Kembali ke website</a></form>@endsection
