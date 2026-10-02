@@ -23,4 +23,4 @@ Panel admin memakai warna dan tipografi sekolah. Desain admin tidak tersedia dal
 - Login admin, dokumen privat, status, ekspor CSV, konten, kunjungan, dan logout diuji melalui browser.
 - Test Laravel memeriksa validasi, hak akses, penyimpanan, pagination, dan permintaan Firestore menggunakan respons HTTP simulasi.
 
-Screenshot dan laporan lokal tersedia di `design-audit/browser`, yang dikecualikan dari Git. Integrasi terhadap proyek Firestore sebenarnya perlu diperiksa setelah proyek dan kredensial dibuat, mengikuti [panduan Firebase](FIREBASE.md).
+Screenshot dan laporan lokal tersedia di `design-audit/browser`, yang dikecualikan dari Git. Integrasi terhadap Firestore `sd-ceria-nusantara` sudah diuji langsung melalui browser untuk login admin, perubahan konten, pendaftaran, kunjungan, dan perubahan status. Hasil dan konfigurasi tersedia pada [status koneksi Firebase](FIREBASE-CONNECTION.md).

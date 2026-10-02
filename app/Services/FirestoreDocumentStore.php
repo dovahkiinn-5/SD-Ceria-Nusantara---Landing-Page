@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Contracts\DocumentStore;
 use Google\Auth\Credentials\ServiceAccountCredentials;
+use Google\Auth\HttpHandler\HttpHandlerFactory;
+use GuzzleHttp\Client as HttpClient;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -21,12 +23,18 @@ class FirestoreDocumentStore implements DocumentStore
         if (! $project || ! is_file($credentials)) {
             throw new RuntimeException('Konfigurasi Firebase belum lengkap. Isi FIREBASE_PROJECT_ID dan FIREBASE_CREDENTIALS.');
         }
-        $token = Cache::remember('firebase-access-'.hash('sha256', $project.$credentials), 3000, function () use ($credentials) {
+        $caBundle = config('school.firebase_ca_bundle');
+        if ($caBundle !== null && $caBundle !== '' && (! is_string($caBundle) || ! is_readable($caBundle))) {
+            throw new RuntimeException('FIREBASE_CA_BUNDLE harus berupa path berkas sertifikat CA yang dapat dibaca.');
+        }
+        $options = ['verify' => $caBundle ?: true, 'timeout' => 20, 'connect_timeout' => 10];
+        $token = Cache::remember('firebase-access-'.hash('sha256', $project.$credentials), 3000, function () use ($credentials, $options) {
             $auth = new ServiceAccountCredentials('https://www.googleapis.com/auth/datastore', $credentials);
-            $token = $auth->fetchAuthToken();
+            $handler = HttpHandlerFactory::build(new HttpClient($options), false);
+            $token = $auth->fetchAuthToken($handler);
             return $token['access_token'] ?? throw new RuntimeException('Autentikasi Firebase gagal.');
         });
-        return Http::withToken($token)->acceptJson()->timeout(20)->connectTimeout(10)
+        return Http::withToken($token)->acceptJson()->withOptions($options)
             ->baseUrl($this->endpoint());
     }
 
@@ -100,7 +108,11 @@ class FirestoreDocumentStore implements DocumentStore
     public function page(string $collection, ?string $cursor = null, int $limit = 25): array
     {
         $data = $this->client()->get('/'.rawurlencode($collection), array_filter([
-            'pageSize' => $limit, 'pageToken' => $cursor, 'orderBy' => '__name__ desc',
+            'pageSize' => $limit, 'pageToken' => $cursor,
+            // Record timestamps use Firestore's automatic descending field index.
+            // Content has stable IDs and no timestamp; use its built-in name order.
+            'orderBy' => in_array($collection, ['applications', 'visits', 'admins'], true)
+                ? 'created_at desc' : '__name__ asc',
         ]))->throw()->json();
         return ['items' => array_map($this->document(...), $data['documents'] ?? []), 'next' => $data['nextPageToken'] ?? null];
     }

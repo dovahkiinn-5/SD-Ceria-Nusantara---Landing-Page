@@ -6,14 +6,14 @@ Website Laravel 12 berdasarkan empat PDF desain sekolah, dengan pendaftaran onli
 
 - Website: **http://127.0.0.1:8000**
 - Admin: **http://127.0.0.1:8000/admin/login**
-- Akun lokal: lihat [`storage/app/private/local-admin.txt`](storage/app/private/local-admin.txt). Ganti kata sandi melalui menu profil setelah masuk.
+- Akun admin awal: lihat [`storage/app/private/local-admin.txt`](storage/app/private/local-admin.txt). Akun ini sudah disalin ke Firestore. Ganti kata sandi melalui menu profil setelah masuk.
 
-Database sekarang memakai **SQLite lokal**. Adapter Cloud Firestore tersedia; proyek Firebase belum terhubung. Ikuti [panduan membuat Firebase gratis](docs/FIREBASE.md) untuk mengaktifkannya dan memindahkan data.
+Database aplikasi sekarang memakai **Cloud Firestore**, proyek `sd-ceria-nusantara`, database `(default)`. Akun admin dan 8 dokumen konten sudah dipindahkan. Login admin, penyimpanan konten, pendaftaran, dan kunjungan menggunakan Firestore. Salinan SQLite tetap tersedia sebagai data sebelum perpindahan. Lihat [status koneksi](docs/FIREBASE-CONNECTION.md) atau [panduan Firebase](docs/FIREBASE.md).
 
 Jika server berhenti, buka PowerShell dari folder proyek:
 
 ```powershell
-.\Start-Website.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Start-Website.ps1
 ```
 
 Atau gunakan PHP XAMPP yang terpasang di komputer ini:
@@ -78,6 +78,6 @@ php artisan test --compact
 
 Test memakai SQLite sementara dan respons HTTP simulasi untuk Firestore. Pemeriksaan terhadap Firebase sebenarnya dilakukan dengan `php artisan school:firebase-check` setelah kredensial dipasang.
 
-Skrip `tools/verify_browser.py` dan `tools/verify_workflow.py` membutuhkan Python, Playwright, Edge, dan website lokal aktif. Workflow memakai akun di file privat, membuat data percobaan, lalu menghapus record percobaan tersebut.
+Skrip `tools/verify_browser.py` dan `tools/verify_workflow.py` membutuhkan Python, Playwright, Edge, dan website lokal aktif. Workflow memakai akun di file privat, membuat data percobaan, lalu menghapus record percobaan tersebut. `tools/verify_firebase_workflow.py` memeriksa penyimpanan langsung ke Firestore, memulihkan perubahan konten, membersihkan record percobaan, dan memastikan data SQLite tidak berubah.
 
 Untuk hosting produksi dan konfigurasi PHP unggahan, lihat bagian hosting pada [panduan Firebase](docs/FIREBASE.md).

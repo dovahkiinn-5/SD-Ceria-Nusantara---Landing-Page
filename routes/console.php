@@ -39,8 +39,21 @@ Artisan::command('school:local-admin', function (DocumentStore $store) {
 
 Artisan::command('school:firebase-check', function () {
     if (config('school.store') !== 'firestore') { $this->error('Atur SCHOOL_STORE=firestore terlebih dahulu.'); return 1; }
-    try { app(DocumentStore::class)->get('content','settings'); $this->info('Koneksi dan autentikasi Firestore berhasil.'); }
-    catch (\Throwable $e) { report($e); $this->error('Koneksi gagal. Periksa project ID, service account, izin IAM, dan koneksi internet.'); return 1; }
+    try {
+        // Listing an empty collection succeeds; a missing database must fail.
+        app(DocumentStore::class)->page('content', null, 1);
+        $this->info('Koneksi dan autentikasi Firestore berhasil.');
+    } catch (\Throwable $e) {
+        report($e);
+        $status = $e instanceof \Illuminate\Http\Client\RequestException ? $e->response->status() : null;
+        $this->error(match ($status) {
+            401 => 'Autentikasi Firestore ditolak. Periksa kredensial service account, lalu bersihkan cache Laravel.',
+            403 => 'Akses Firestore ditolak. Periksa izin IAM service account dan pastikan API Firestore aktif.',
+            404 => 'Database Firestore tidak ditemukan. Periksa Project ID, FIREBASE_DATABASE_ID, dan apakah database sudah dibuat.',
+            default => 'Koneksi gagal. Periksa project ID, service account, izin IAM, dan koneksi internet.',
+        });
+        return 1;
+    }
 })->purpose('Periksa koneksi Firestore tanpa menulis data');
 
 Artisan::command('school:import-firestore', function () {
@@ -50,6 +63,7 @@ Artisan::command('school:import-firestore', function () {
     \Illuminate\Support\Facades\DB::table('documents')->orderBy('collection')->orderBy('document_id')->chunk(100,function($rows) use($target,&$count) {
         foreach($rows as $row) $count += (int)$target->create($row->collection,$row->document_id,json_decode($row->payload,true,512,JSON_THROW_ON_ERROR));
     });
+    \Illuminate\Support\Facades\Cache::forget('school-content-firestore');
     $this->info("{$count} dokumen baru disalin ke Firestore. Dokumen lama tidak ditimpa. Berkas unggahan tetap berada di storage/app.");
 })->purpose('Salin data lokal ke Firestore setelah konfigurasi diisi');
 

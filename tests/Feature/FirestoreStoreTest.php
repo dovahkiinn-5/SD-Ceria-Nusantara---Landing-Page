@@ -43,6 +43,7 @@ class FirestoreStoreTest extends TestCase
         $this->assertSame(123,$store->count('applications'));
         Http::assertSent(fn($request)=>$request->url()===$base.':runAggregationQuery' && $request->hasHeader('Authorization','Bearer test-access-token'));
         Http::assertSent(fn($request)=>str_contains($request->url(),'pageToken=cursor-token'));
+        Http::assertSent(fn($request)=>($request['orderBy'] ?? null) === 'created_at desc');
     }
     public function test_create_conflict_is_not_overwritten_and_cloud_failures_do_not_fallback(): void
     {
@@ -51,5 +52,24 @@ class FirestoreStoreTest extends TestCase
         Http::fake(['*'=>Http::response(['error'=>['message'=>'unavailable']],503)]);
         $this->expectException(\Illuminate\Http\Client\RequestException::class);
         (new FirestoreDocumentStore)->get('content','home');
+    }
+
+    public function test_custom_ca_bundle_is_used_for_firestore_requests(): void
+    {
+        config(['school.firebase_ca_bundle' => $this->credentials]);
+        Http::fake(function ($request, $options) {
+            $this->assertSame($this->credentials, $options['verify']);
+            $this->assertSame('__name__ asc', $request['orderBy']);
+            return Http::response([]);
+        });
+        $this->assertSame([], (new FirestoreDocumentStore)->page('content')['items']);
+    }
+
+    public function test_ca_setting_cannot_disable_tls_verification(): void
+    {
+        config(['school.firebase_ca_bundle' => false]);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('FIREBASE_CA_BUNDLE');
+        (new FirestoreDocumentStore)->page('content');
     }
 }

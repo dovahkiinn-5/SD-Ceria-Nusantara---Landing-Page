@@ -1,6 +1,6 @@
 # Membuat Firebase gratis dan menghubungkannya ke Laravel
 
-Website sudah berjalan dengan SQLite lokal. Panduan ini mengaktifkan **Cloud Firestore** untuk akun admin, konten sekolah, pendaftar, dan permintaan kunjungan. Proyek Firebase belum dibuat atau dihubungkan otomatis.
+Panduan ini mengaktifkan **Cloud Firestore** untuk akun admin, konten sekolah, pendaftar, dan permintaan kunjungan. Proyek `sd-ceria-nusantara` sudah dibuat dan dapat diakses Firebase CLI. Lihat [status dan pengaturan koneksi Laravel](FIREBASE-CONNECTION.md) untuk langkah pada instalasi ini.
 
 ## 1. Pilih paket gratis
 
@@ -138,7 +138,7 @@ Koleksi utama: `admins`, `content`, `applications`, dan `visits`. Daftar admin m
 | Kredensial tidak ditemukan | Nama file, lokasi privat, dan `FIREBASE_CREDENTIALS` bila diisi |
 | `PERMISSION_DENIED` / HTTP 403 | Izin IAM service account dan API Firestore pada proyek |
 | `NOT_FOUND` / HTTP 404 | Project ID, database sudah dibuat, ID database `(default)` |
-| Kesalahan koneksi / sertifikat | Internet, ekstensi cURL/OpenSSL, dan konfigurasi CA PHP; jangan menonaktifkan verifikasi TLS |
+| Kesalahan koneksi / sertifikat | Internet, ekstensi cURL/OpenSSL, dan konfigurasi CA PHP. Jika perlu, isi `FIREBASE_CA_BUNDLE` dengan path bundle CA tepercaya; verifikasi TLS tetap aktif |
 | Akun lokal tidak bisa masuk setelah beralih | Jalankan import, atau buat akun pemilik di Firestore |
 | Kuota habis | Periksa Usage; tunggu pembaruan kuota atau evaluasi kebutuhan kapasitas |
 
