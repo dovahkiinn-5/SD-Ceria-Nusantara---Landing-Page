@@ -6,7 +6,7 @@ use App\Contracts\DocumentStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use Tests\Support\FakeFirestoreFileStorage;
 use Tests\TestCase;
 
 class AdminWorkflowTest extends TestCase
@@ -18,6 +18,9 @@ class AdminWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $storage = new FakeFirestoreFileStorage;
+        $this->app->instance(FakeFirestoreFileStorage::class, $storage);
+        $this->app->instance(\App\Services\FirestoreFileStorage::class, $storage);
         app(DocumentStore::class)->create('admins',hash('sha256',$this->email),[
             'email'=>$this->email,'name'=>'Pemilik Uji','password'=>Hash::make($this->password),'role'=>'owner','active'=>true,
         ]);
@@ -65,7 +68,8 @@ class AdminWorkflowTest extends TestCase
     }
     public function test_admin_can_review_download_export_and_delete_registration(): void
     {
-        Storage::fake('local');Storage::disk('local')->put('applications/test/photo.png','test-image');
+        $storage = app(FakeFirestoreFileStorage::class);
+        $storage->put('applications/test/photo.png','test-image','image/png');
         $store=app(DocumentStore::class);
         $store->put('applications','CN-TEST',['reference'=>'CN-TEST','child'=>['child_name'=>'=DANGEROUS()','birth_date'=>'2019-01-01'],'parent'=>['parent_name'=>'Wali','phone'=>'+628123456789','email'=>'wali@example.test'],'created_at'=>now()->toIso8601String(),'status'=>'baru','documents'=>['photo'=>['path'=>'applications/test/photo.png','name'=>'foto.png']]]);
         $this->login();
@@ -73,12 +77,12 @@ class AdminWorkflowTest extends TestCase
         $this->patch('/admin/data/applications/CN-TEST',['status'=>'diterima','admin_notes'=>'Lengkap'])->assertRedirect();
         $this->assertSame('diterima',$store->get('applications','CN-TEST')['status']);
         $this->patch('/admin/data/applications/CN-TEST',['status'=>'unknown'])->assertSessionHasErrors('status');
-        $this->get('/admin/berkas/CN-TEST/photo')->assertDownload('foto.png');
+        $this->get('/admin/berkas/CN-TEST/photo')->assertDownload('foto.png')->assertStreamedContent('test-image');
         $csv=$this->get('/admin/pendaftar/export')->assertOk()->streamedContent();
         $this->assertStringContainsString("'=DANGEROUS()",$csv);
         $this->delete('/admin/data/applications/CN-TEST')->assertRedirect('/admin/data/applications');
         $this->assertNull($store->get('applications','CN-TEST'));
-        Storage::disk('local')->assertMissing('applications/test/photo.png');
+        $this->assertFalse($storage->exists('applications/test/photo.png'));
     }
     public function test_password_change_preserves_current_session_and_hashes_password(): void
     {

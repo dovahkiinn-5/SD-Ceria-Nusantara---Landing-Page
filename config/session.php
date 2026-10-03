@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'firestore'),
 
     /*
     |--------------------------------------------------------------------------
@@ -102,6 +102,7 @@ return [
     */
 
     'store' => env('SESSION_STORE'),
+    'block_store' => env('SESSION_BLOCK_STORE'),
 
     /*
     |--------------------------------------------------------------------------

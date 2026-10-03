@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use App\Contracts\DocumentStore;
+use App\Services\FirestoreFileStorage;
 use App\Services\SchoolContent;
 
 Artisan::command('school:seed-content', function (DocumentStore $store, SchoolContent $content) {
@@ -27,16 +27,6 @@ Artisan::command('school:admin {email} {--name=Administrator}', function (Docume
     $this->info('Akun pemilik berhasil dibuat. Masuk melalui /admin/login.');
 })->purpose('Buat akun pemilik tanpa kata sandi bawaan');
 
-Artisan::command('school:local-admin', function (DocumentStore $store) {
-    if (! app()->environment('local') || config('school.store') !== 'sqlite') { $this->error('Perintah ini khusus lingkungan lokal SQLite.'); return 1; }
-    $email = 'admin@sdceria.local';
-    $password = Str::password(24);
-    if ($store->create('admins',hash('sha256',$email),['name'=>'Admin Sekolah','email'=>$email,'password'=>Hash::make($password),'role'=>'owner','active'=>true,'created_at'=>now()->toIso8601String()])) {
-        Storage::disk('local')->put('local-admin.txt',"Email: {$email}\nPassword: {$password}\nURL: http://127.0.0.1:8000/admin/login\n\nGanti kata sandi melalui Profil & Kata Sandi setelah masuk.\n");
-        $this->info('Kredensial lokal disimpan di storage/app/private/local-admin.txt.');
-    } else { $this->info('Akun lokal sudah tersedia; kata sandi tidak diubah.'); }
-})->purpose('Siapkan akun admin lokal dengan kata sandi acak');
-
 Artisan::command('school:firebase-check', function () {
     if (config('school.store') !== 'firestore') { $this->error('Atur SCHOOL_STORE=firestore terlebih dahulu.'); return 1; }
     try {
@@ -56,28 +46,45 @@ Artisan::command('school:firebase-check', function () {
     }
 })->purpose('Periksa koneksi Firestore tanpa menulis data');
 
+Artisan::command('school:migrate-local-uploads', function (FirestoreFileStorage $firebase) {
+    if (! app()->environment('local', 'testing') || config('school.store') !== 'firestore') {
+        $this->error('Migrasi unggahan hanya dapat dijalankan dari lingkungan lokal dengan Firestore aktif.');
+        return 1;
+    }
+
+    $migrated = 0;
+    foreach ([
+        ['local', 'applications'],
+        ['public', 'media'],
+    ] as [$diskName, $directory]) {
+        $disk = Storage::disk($diskName);
+
+        foreach ($disk->allFiles($directory) as $path) {
+            $contents = $disk->get($path);
+            if (! is_string($contents)) {
+                throw new \RuntimeException("Tidak dapat membaca berkas lokal: {$path}");
+            }
+
+            $firebase->put($path, $contents, $disk->mimeType($path) ?: 'application/octet-stream');
+            $migrated++;
+            $this->line("Tersalin: {$path}");
+        }
+    }
+
+    $this->info("{$migrated} berkas lokal tersalin ke Firestore. Berkas sumber lokal tidak dihapus.");
+})->purpose('Salin unggahan lokal ke Firestore tanpa menghapus sumber');
+
 Artisan::command('school:import-firestore', function () {
+    if (! app()->environment('local', 'testing') || config('database.default') !== 'sqlite') {
+        $this->error('Impor SQLite hanya berjalan secara lokal dengan DB_CONNECTION=sqlite.');
+        return 1;
+    }
     if (!config('school.firebase_project')) { $this->error('Isi konfigurasi Firebase terlebih dahulu.'); return 1; }
-    $target = new \App\Services\FirestoreDocumentStore;
+    $target = app(\App\Services\FirestoreDocumentStore::class);
     $count = 0;
     \Illuminate\Support\Facades\DB::table('documents')->orderBy('collection')->orderBy('document_id')->chunk(100,function($rows) use($target,&$count) {
         foreach($rows as $row) $count += (int)$target->create($row->collection,$row->document_id,json_decode($row->payload,true,512,JSON_THROW_ON_ERROR));
     });
     \Illuminate\Support\Facades\Cache::forget('school-content-firestore');
-    $this->info("{$count} dokumen baru disalin ke Firestore. Dokumen lama tidak ditimpa. Berkas unggahan tetap berada di storage/app.");
+    $this->info("{$count} dokumen baru disalin ke Firestore. Dokumen lama tidak ditimpa.");
 })->purpose('Salin data lokal ke Firestore setelah konfigurasi diisi');
-
-Artisan::command('school:prune-uploads', function (DocumentStore $store) {
-    $disk = Storage::disk('local');
-    $removed = 0;
-    foreach($disk->directories('applications') as $directory) {
-        $id = basename($directory);
-        if (!preg_match('/^CN-\d{4}-[0-9A-Z]{10}$/',$id)) continue;
-        $files = $disk->files($directory);
-        $latest = $files ? max(array_map(fn($file)=>$disk->lastModified($file),$files)) : time();
-        if ($latest < now()->subDays(2)->timestamp && !$store->get('applications',$id)) { $disk->deleteDirectory($directory); $removed++; }
-    }
-    $this->info("{$removed} unggahan pendaftaran yang tidak selesai dibersihkan.");
-})->purpose('Hapus unggahan tanpa pendaftaran setelah dua hari');
-
-\Illuminate\Support\Facades\Schedule::command('school:prune-uploads')->daily()->withoutOverlapping();

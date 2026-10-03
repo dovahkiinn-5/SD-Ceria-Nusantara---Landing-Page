@@ -4,6 +4,8 @@
     { "collectionGroup": "applications", "fieldPath": "child", "indexes": [] },
     { "collectionGroup": "applications", "fieldPath": "parent", "indexes": [] },
     { "collectionGroup": "applications", "fieldPath": "documents", "indexes": [] },
-    { "collectionGroup": "admins", "fieldPath": "password", "indexes": [] }
+    { "collectionGroup": "admins", "fieldPath": "password", "indexes": [] },
+    { "collectionGroup": "uploaded_files", "fieldPath": "*", "indexes": [] },
+    { "collectionGroup": "uploaded_file_chunks", "fieldPath": "*", "indexes": [] }
   ]
 }

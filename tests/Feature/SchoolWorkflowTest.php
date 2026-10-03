@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Contracts\DocumentStore;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
+use Tests\Support\FakeFirestoreFileStorage;
 use Tests\TestCase;
 
 class SchoolWorkflowTest extends TestCase
@@ -15,7 +15,8 @@ class SchoolWorkflowTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Storage::fake('local');
+        $this->app->instance(FakeFirestoreFileStorage::class, new FakeFirestoreFileStorage);
+        $this->app->instance(\App\Services\FirestoreFileStorage::class, $this->app->make(FakeFirestoreFileStorage::class));
     }
 
     public function test_all_public_pages_render(): void
@@ -67,7 +68,7 @@ class SchoolWorkflowTest extends TestCase
         $this->assertSame(1,$store->count('applications'));
         $record=$store->get('applications',$reference);
         $this->assertSame('baru',$record['status']);
-        Storage::disk('local')->assertExists($record['documents']['photo']['path']);
+        $this->assertTrue(app(FakeFirestoreFileStorage::class)->exists($record['documents']['photo']['path']));
         $this->get('/pendaftaran/berhasil')->assertOk()->assertSee($reference);
         $this->get('/admin/berkas/'.$reference.'/photo')->assertRedirect('/admin/login');
         $this->get('/storage/'.$record['documents']['photo']['path'])->assertNotFound();
@@ -80,10 +81,35 @@ class SchoolWorkflowTest extends TestCase
         $this->post('/pendaftaran/langkah/2',$this->parentData());
         $this->post('/pendaftaran/langkah/3',[
             'birth_certificate'=>UploadedFile::fake()->create('code.php',10,'application/x-php'),
-            'family_card'=>UploadedFile::fake()->create('kk.pdf',6000,'application/pdf'),
+            'family_card'=>UploadedFile::fake()->create('kk.pdf',1025,'application/pdf'),
             'photo'=>UploadedFile::fake()->create('photo.svg',10,'image/svg+xml'),
         ])->assertSessionHasErrors(['birth_certificate','family_card','photo']);
-        $this->assertSame([],Storage::disk('local')->allFiles());
+        $this->assertSame([],app(FakeFirestoreFileStorage::class)->objects);
+    }
+
+    public function test_registration_accepts_three_documents_at_the_one_megabyte_limit(): void
+    {
+        $this->post('/pendaftaran/langkah/1',$this->child());
+        $this->post('/pendaftaran/langkah/2',$this->parentData());
+
+        $this->post('/pendaftaran/langkah/3',[
+            'birth_certificate'=>UploadedFile::fake()->create('akta.pdf',1024,'application/pdf'),
+            'family_card'=>UploadedFile::fake()->create('kk.pdf',1024,'application/pdf'),
+            'photo'=>UploadedFile::fake()->image('foto.png')->size(1024),
+        ])->assertRedirect('/pendaftaran/4');
+
+        $this->assertCount(3,app(FakeFirestoreFileStorage::class)->objects);
+    }
+
+    public function test_public_media_is_served_from_firestore(): void
+    {
+        $storage = app(FakeFirestoreFileStorage::class);
+        $storage->put('media/school.png', 'image-data', 'image/png');
+
+        $this->get('/media/school.png')
+            ->assertOk()
+            ->assertHeader('Content-Type', 'image/png')
+            ->assertContent('image-data');
     }
 
     public function test_replacing_upload_removes_previous_file(): void
@@ -91,8 +117,9 @@ class SchoolWorkflowTest extends TestCase
         $this->completeDraft();
         $old=session('registration.documents.photo.path');
         $this->post('/pendaftaran/langkah/3',['photo'=>UploadedFile::fake()->create('baru.png',10,'image/png')])->assertRedirect('/pendaftaran/4');
-        Storage::disk('local')->assertMissing($old);
-        Storage::disk('local')->assertExists(session('registration.documents.photo.path'));
+        $storage = app(FakeFirestoreFileStorage::class);
+        $this->assertFalse($storage->exists($old));
+        $this->assertTrue($storage->exists(session('registration.documents.photo.path')));
     }
 
     public function test_visit_requires_consent_and_weekday_and_is_saved(): void

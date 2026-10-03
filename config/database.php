@@ -17,7 +17,8 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    // Firestore is the app store; SQL is opt-in for tests and legacy imports only.
+    'default' => env('DB_CONNECTION', 'firestore'),
 
     /*
     |--------------------------------------------------------------------------

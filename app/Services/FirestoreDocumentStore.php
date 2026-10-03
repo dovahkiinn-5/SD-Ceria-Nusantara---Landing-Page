@@ -3,12 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\DocumentStore;
-use Google\Auth\Credentials\ServiceAccountCredentials;
-use Google\Auth\HttpHandler\HttpHandlerFactory;
-use GuzzleHttp\Client as HttpClient;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 
 class FirestoreDocumentStore implements DocumentStore
 {
@@ -18,24 +13,13 @@ class FirestoreDocumentStore implements DocumentStore
     }
     private function client()
     {
-        $project = config('school.firebase_project');
-        $credentials = config('school.firebase_credentials');
-        if (! $project || ! is_file($credentials)) {
-            throw new RuntimeException('Konfigurasi Firebase belum lengkap. Isi FIREBASE_PROJECT_ID dan FIREBASE_CREDENTIALS.');
-        }
-        $caBundle = config('school.firebase_ca_bundle');
-        if ($caBundle !== null && $caBundle !== '' && (! is_string($caBundle) || ! is_readable($caBundle))) {
-            throw new RuntimeException('FIREBASE_CA_BUNDLE harus berupa path berkas sertifikat CA yang dapat dibaca.');
-        }
-        $options = ['verify' => $caBundle ?: true, 'timeout' => 20, 'connect_timeout' => 10];
-        $token = Cache::remember('firebase-access-'.hash('sha256', $project.$credentials), 3000, function () use ($credentials, $options) {
-            $auth = new ServiceAccountCredentials('https://www.googleapis.com/auth/datastore', $credentials);
-            $handler = HttpHandlerFactory::build(new HttpClient($options), false);
-            $token = $auth->fetchAuthToken($handler);
-            return $token['access_token'] ?? throw new RuntimeException('Autentikasi Firebase gagal.');
-        });
-        return Http::withToken($token)->acceptJson()->withOptions($options)
+        return Http::withToken($this->accessToken())->acceptJson()->withOptions((new FirebaseCredentials)->httpOptions())
             ->baseUrl($this->endpoint());
+    }
+
+    protected function accessToken(): string
+    {
+        return (new FirebaseCredentials)->accessToken('https://www.googleapis.com/auth/datastore');
     }
 
     private function path(string $collection, string $id): string
@@ -91,6 +75,44 @@ class FirestoreDocumentStore implements DocumentStore
         $this->client()->patch($this->path($collection, $id), $this->fields($data))->throw();
     }
 
+    public function putMany(string $collection, array $documents): void
+    {
+        $this->putDocuments([$collection => $documents]);
+    }
+
+    public function deleteMany(string $collection, array $ids): void
+    {
+        $this->deleteDocuments([$collection => $ids]);
+    }
+
+    public function putDocuments(array $collections): void
+    {
+        $writes = [];
+        foreach ($collections as $collection => $documents) {
+            foreach ($documents as $id => $data) {
+                $writes[] = ['update' => ['name' => $this->resourceName($collection, (string) $id)] + $this->fields($data)];
+            }
+        }
+
+        if (! $this->commitWrites($writes)) {
+            throw new \RuntimeException('Firestore menolak batch penulisan dokumen.');
+        }
+    }
+
+    public function deleteDocuments(array $collections): void
+    {
+        $writes = [];
+        foreach ($collections as $collection => $ids) {
+            foreach ($ids as $id) {
+                $writes[] = ['delete' => $this->resourceName($collection, (string) $id)];
+            }
+        }
+
+        if (! $this->commitWrites($writes)) {
+            throw new \RuntimeException('Firestore menolak batch penghapusan dokumen.');
+        }
+    }
+
     public function create(string $collection, string $id, array $data): bool
     {
         $response = $this->client()->post('/'.rawurlencode($collection).'?documentId='.rawurlencode($id), $this->fields($data));
@@ -124,5 +146,73 @@ class FirestoreDocumentStore implements DocumentStore
             'aggregations' => [['alias' => 'total', 'count' => (object) []]],
         ]])->throw()->json();
         return (int) ($data[0]['result']['aggregateFields']['total']['integerValue'] ?? 0);
+    }
+
+    /** Read the server update time alongside data for optimistic concurrency. */
+    public function snapshot(string $collection, string $id): array
+    {
+        $response = $this->client()->get($this->path($collection, $id));
+        if ($response->status() === 404) return ['data'=>null, 'version'=>null];
+        $document = $response->throw()->json();
+        return ['data'=>$this->document($document), 'version'=>$document['updateTime']];
+    }
+
+    /** Only commit when the document still has the version observed by the caller. */
+    public function compareAndSwap(string $collection, string $id, ?string $version, array $data): bool
+    {
+        return $this->conditionalCommit([
+            'update'=>['name'=>$this->resourceName($collection, $id)] + $this->fields($data),
+            'currentDocument'=>$version === null ? ['exists'=>false] : ['updateTime'=>$version],
+        ]);
+    }
+
+    public function deleteIfUnchanged(string $collection, string $id, string $version): bool
+    {
+        return $this->conditionalCommit(['delete'=>$this->resourceName($collection, $id),
+            'currentDocument'=>['updateTime'=>$version]]);
+    }
+
+    private function resourceName(string $collection, string $id): string
+    {
+        return 'projects/'.config('school.firebase_project').'/databases/'.config('school.firebase_database').'/documents/'.$collection.'/'.$id;
+    }
+
+    private function conditionalCommit(array $write): bool
+    {
+        return $this->commitWrites([$write]);
+    }
+
+    private function commitWrites(array $writes): bool
+    {
+        if ($writes === []) {
+            return true;
+        }
+        if (count($writes) > 500) {
+            throw new \InvalidArgumentException('Firestore batch maksimal 500 dokumen.');
+        }
+
+        $response = $this->client()->post($this->endpoint().':commit', ['writes' => $writes]);
+        if (in_array($response->json('error.status'), ['FAILED_PRECONDITION', 'ALREADY_EXISTS', 'ABORTED', 'NOT_FOUND'], true)) return false;
+        $response->throw();
+        return true;
+    }
+
+    /** Bounded sweep; update-time preconditions prevent deleting renewed records. */
+    public function expiredSnapshots(string $collection, int $timestamp, int $limit = 100): array
+    {
+        $response = $this->client()->post($this->endpoint().':runQuery', ['structuredQuery'=>[
+            'from'=>[['collectionId'=>$collection]],
+            'where'=>['compositeFilter'=>['op'=>'AND', 'filters'=>[
+                ['fieldFilter'=>['field'=>['fieldPath'=>'expires_at'], 'op'=>'GREATER_THAN', 'value'=>['integerValue'=>'0']]],
+                ['fieldFilter'=>['field'=>['fieldPath'=>'expires_at'], 'op'=>'LESS_THAN_OR_EQUAL', 'value'=>['integerValue'=>(string) $timestamp]]],
+            ]]],
+            'orderBy'=>[['field'=>['fieldPath'=>'expires_at'], 'direction'=>'ASCENDING']],
+            'limit'=>max(1, min(100, $limit)),
+        ]])->throw()->json();
+        $items = [];
+        foreach ($response as $row) {
+            if (isset($row['document'])) $items[] = ['data'=>$this->document($row['document']), 'version'=>$row['document']['updateTime']];
+        }
+        return $items;
     }
 }

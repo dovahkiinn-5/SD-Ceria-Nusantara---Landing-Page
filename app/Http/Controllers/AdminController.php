@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\DocumentStore;
+use App\Services\FirestoreFileStorage;
 use App\Services\SchoolContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -69,23 +69,32 @@ class AdminController extends Controller
         $store->put($collection, $id, $record);
         return back()->with('status','Status berhasil diperbarui.');
     }
-    public function deleteRecord(Request $request, DocumentStore $store, string $collection, string $id)
+    public function deleteRecord(Request $request, DocumentStore $store, FirestoreFileStorage $storage, string $collection, string $id)
     {
         abort_unless($request->user()->role === 'owner', 403);
         abort_unless(in_array($collection, ['applications','visits']), 404);
         $record = $store->get($collection, $id);
         abort_unless($record, 404);
+        foreach ($record['documents'] ?? [] as $file) $storage->delete($file['path']);
         $store->delete($collection, $id);
-        foreach ($record['documents'] ?? [] as $file) Storage::disk('local')->delete($file['path']);
         return redirect()->route('admin.records',$collection)->with('status','Data dan berkas berhasil dihapus.');
     }
-    public function document(DocumentStore $store, string $id, string $field)
+    public function document(DocumentStore $store, FirestoreFileStorage $storage, string $id, string $field)
     {
         abort_unless(in_array($field,['birth_certificate','family_card','photo']),404);
         $record = $store->get('applications',$id);
         $file = $record['documents'][$field] ?? null;
-        abort_unless($file && Storage::disk('local')->exists($file['path']),404);
-        return Storage::disk('local')->download($file['path'], Str::ascii(basename($file['name'])));
+        $download = $file ? $storage->get($file['path']) : null;
+        abort_unless($download,404);
+        return response()->streamDownload(
+            static function () use ($download) { echo $download['contents']; },
+            Str::ascii(basename($file['name'])),
+            [
+                'Content-Type' => $download['content_type'],
+                'Cache-Control' => 'private, no-store',
+                'X-Content-Type-Options' => 'nosniff',
+            ],
+        );
     }
     public function export(DocumentStore $store)
     {
@@ -113,12 +122,12 @@ class AdminController extends Controller
         $fields = Arr::dot($all[$section]);
         return view('admin.content',compact('all','section','fields'));
     }
-    public function updateContent(Request $request, SchoolContent $content, string $section)
+    public function updateContent(Request $request, SchoolContent $content, FirestoreFileStorage $storage, string $section)
     {
         $all = $content->all();
         abort_unless(isset($all[$section]),404);
         $fields = Arr::dot($all[$section]);
-        $request->validate(['values'=>'required|array','uploads.*'=>'nullable|file|mimes:jpg,jpeg,png,webp|max:5120']);
+        $request->validate(['values'=>'required|array','uploads.*'=>'nullable|file|mimes:jpg,jpeg,png,webp|max:1024']);
         $data = [];
         foreach ($fields as $key => $value) {
             $new = $request->input('values')[$key] ?? $value;
@@ -129,8 +138,8 @@ class AdminController extends Controller
                 }
                 $index = array_search($key,array_keys($fields));
                 if ($file = $request->file('uploads.'.$index)) {
-                    $path = $file->store('media','public');
-                    if (! $path) throw new \RuntimeException('Gambar gagal disimpan.');
+                    $path = 'media/'.Str::uuid().'.'.$file->guessExtension();
+                    $storage->putUploadedFile($path, $file);
                     $new = '/'.$path;
                 }
             }

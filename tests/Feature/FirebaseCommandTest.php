@@ -3,36 +3,34 @@
 namespace Tests\Feature;
 
 use App\Services\SqliteDocumentStore;
+use App\Services\FirestoreDocumentStore;
+use App\Services\FirestoreFileStorage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
+use Tests\Support\FakeFirestoreFileStorage;
 use Tests\TestCase;
 
 class FirebaseCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    private string $credentials;
-
     protected function setUp(): void
     {
         parent::setUp();
-        $this->credentials = tempnam(sys_get_temp_dir(), 'firebase-command-test-');
-        file_put_contents($this->credentials, '{}');
         config([
             'school.store' => 'firestore',
             'school.firebase_project' => 'demo-school',
             'school.firebase_database' => '(default)',
-            'school.firebase_credentials' => $this->credentials,
         ]);
-        Cache::put('firebase-access-'.hash('sha256', 'demo-school'.$this->credentials), 'test-access-token', 300);
+        $this->app->instance(FirestoreDocumentStore::class, new class extends FirestoreDocumentStore {
+            protected function accessToken(): string
+            {
+                return 'test-access-token';
+            }
+        });
         Http::preventStrayRequests();
-    }
-
-    protected function tearDown(): void
-    {
-        unlink($this->credentials);
-        parent::tearDown();
     }
 
     public function test_connection_check_accepts_an_empty_collection_without_writing(): void
@@ -58,6 +56,25 @@ class FirebaseCommandTest extends TestCase
             ->doesntExpectOutputToContain('Koneksi dan autentikasi Firestore berhasil.')
             ->doesntExpectOutputToContain('private diagnostic data')
             ->assertFailed();
+    }
+
+    public function test_local_upload_migration_copies_to_firestore_without_deleting_sources(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+        Storage::disk('local')->put('applications/CN-OLD/akta.pdf', 'application-bytes');
+        Storage::disk('public')->put('media/school.png', 'image-bytes');
+        $storage = new FakeFirestoreFileStorage;
+        $this->app->instance(FirestoreFileStorage::class, $storage);
+
+        $this->artisan('school:migrate-local-uploads')
+            ->expectsOutputToContain('2 berkas lokal tersalin ke Firestore.')
+            ->assertSuccessful();
+
+        $this->assertSame('application-bytes', $storage->objects['applications/CN-OLD/akta.pdf']);
+        $this->assertSame('image-bytes', $storage->objects['media/school.png']);
+        Storage::disk('local')->assertExists('applications/CN-OLD/akta.pdf');
+        Storage::disk('public')->assertExists('media/school.png');
     }
 
     public function test_import_clears_firestore_content_cache_even_when_local_driver_is_selected(): void

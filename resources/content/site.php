@@ -65,7 +65,7 @@ return [
         ],
         'faq'=>[
             ['question'=>'Kapan pendaftaran siswa baru dibuka?','answer'=>'Periode pendaftaran Oktober 2026–Mei 2027. Hubungi panitia untuk memastikan ketersediaan tempat.'],
-            ['question'=>'Dokumen apa saja yang perlu disiapkan?','answer'=>'Siapkan akta kelahiran, Kartu Keluarga, dan pas foto anak. Akta dan KK dapat berupa JPG, PNG, atau PDF; pas foto berupa JPG atau PNG, maksimal 5 MB per berkas.'],
+            ['question'=>'Dokumen apa saja yang perlu disiapkan?','answer'=>'Siapkan akta kelahiran, Kartu Keluarga, dan pas foto anak. Akta dan KK dapat berupa JPG, PNG, atau PDF; pas foto berupa JPG atau PNG, maksimal 1 MB per berkas.'],
             ['question'=>'Berapa biaya pendaftaran dan pendidikan?','answer'=>'Biaya pendaftaran dalam informasi sekolah adalah Rp250.000. Hubungi panitia untuk rincian biaya pendidikan terbaru.'],
             ['question'=>'Bisakah orang tua mengunjungi sekolah?','answer'=>'Bisa. Ajukan jadwal kunjungan melalui halaman Kontak. Tim sekolah akan menghubungi Anda untuk konfirmasi.'],
             ['question'=>'Berapa usia minimum calon siswa?','answer'=>'Usia masuk dalam informasi sekolah adalah 6–7 tahun pada Juli 2027. Konfirmasikan kebutuhan anak kepada panitia.'],

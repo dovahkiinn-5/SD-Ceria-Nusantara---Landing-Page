@@ -4,16 +4,23 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\VisitController;
+use App\Services\FirestoreFileStorage;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 
 foreach (['home'=>'','about'=>'tentang-kami','program'=>'program','facilities'=>'fasilitas','teachers'=>'guru-staf','gallery'=>'galeri','contact'=>'kontak','privacy'=>'privasi','terms'=>'syarat-ketentuan'] as $page=>$path) {
     Route::get('/'.$path,[PageController::class,'show'])->defaults('page',$page)->name($page);
 }
-Route::get('/media/{filename}', function (string $filename) {
+Route::get('/media/{filename}', function (string $filename, FirestoreFileStorage $storage) {
     abort_unless(preg_match('/^[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/',$filename),404);
-    abort_unless(Storage::disk('public')->exists('media/'.$filename),404);
-    return Storage::disk('public')->response('media/'.$filename,null,['Cache-Control'=>'public, max-age=86400']);
+    $image = $storage->get('media/'.$filename);
+    abort_unless($image,404);
+
+    return response($image['contents'], 200, [
+        'Content-Type' => $image['content_type'],
+        'Content-Length' => $image['size'],
+        'Cache-Control' => 'public, max-age=86400',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
 })->name('media');
 Route::get('/pendaftaran/berhasil',[RegistrationController::class,'success'])->name('registration.success');
 Route::get('/pendaftaran/{step?}',[RegistrationController::class,'show'])->where('step','[1-4]')->name('registration');

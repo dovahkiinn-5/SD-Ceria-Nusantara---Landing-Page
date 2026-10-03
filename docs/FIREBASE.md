@@ -18,7 +18,7 @@ Kuota gratis Firestore, diperiksa pada 2 Oktober 2026:
 
 Satu database per proyek mendapat kuota gratis. Pantau tab **Usage**. Backup terkelola, pemulihan, dan beberapa fitur lanjutan memerlukan penagihan. [Kuota resmi Firestore](https://firebase.google.com/docs/firestore/quotas).
 
-Firestore menyimpan dokumen. Aplikasi sudah mempunyai adapter Firestore sehingga formulir dan admin dapat menggunakan layanan ini. Berkas KK, akta, dan foto tetap disimpan pada disk privat server Laravel; Firestore menyimpan data dan lokasi berkas. Kapasitas berkas mengikuti ruang disk server.
+Firestore menyimpan seluruh data aplikasi, session, cache, dokumen KK/akta/foto, dan gambar konten. Berkas dibagi menjadi potongan 512 KiB yang disimpan pada koleksi Firestore privat. Tidak perlu mengaktifkan Firebase Storage atau meng-upgrade paket Firebase.
 
 ## 2. Buat proyek dan database
 
@@ -68,7 +68,7 @@ Set-Location -LiteralPath 'E:\Landing Page Website'
 & 'C:\xampp\php\php.exe' artisan school:firebase-check
 ```
 
-Hasil yang diharapkan: **Koneksi dan autentikasi Firestore berhasil.** Pemeriksaan hanya membaca. Apabila PHP sudah tersedia di PATH, `php` dapat menggantikan path XAMPP pada seluruh perintah panduan ini.
+Hasil yang diharapkan: **Koneksi dan autentikasi Firestore berhasil**. Pemeriksaan hanya membaca. Apabila PHP sudah tersedia di PATH, `php` dapat menggantikan path XAMPP pada seluruh perintah panduan ini.
 
 ## 5. Isi database
 
@@ -79,13 +79,15 @@ Pilih salah satu cara berikut.
 Cara ini cocok untuk instalasi sekarang: konten dan akun admin lokal sudah tersedia.
 
 ```powershell
+$env:DB_CONNECTION = 'sqlite'
 & 'C:\xampp\php\php.exe' artisan school:import-firestore
 & 'C:\xampp\php\php.exe' artisan optimize:clear
+Remove-Item Env:DB_CONNECTION
 ```
 
-Perintah menyalin dokumen SQLite ke Firestore dan melewati ID yang sudah ada. Data lokal tetap ada. Akun lokal yang disalin dapat dipakai untuk masuk; kata sandi tersimpan sebagai hash. Buat akun pengelola dengan email sendiri melalui menu **Akun admin**, lalu ganti kata sandi melalui **Profil & Kata Sandi**.
+Perintah menyalin dokumen SQLite ke Firestore dan melewati ID yang sudah ada. Ini hanya migrasi satu kali; website tidak memakai SQLite saat beroperasi. Data lokal tetap ada. Akun yang disalin dapat dipakai untuk masuk; kata sandi tersimpan sebagai hash. Buat akun pengelola dengan email sendiri melalui menu **Akun admin**, lalu ganti kata sandi melalui **Profil & Kata Sandi**. Variabel `DB_CONNECTION` dipakai hanya selama import lokal.
 
-Import tidak menyalin berkas ke cloud. Saat pindah komputer atau hosting, ikut salin folder `storage/app/private/applications` dan `storage/app/public/media` melalui saluran privat. Data Firestore dan berkasnya harus tetap berpasangan.
+Untuk menyalin unggahan lama tanpa menghapus sumber lokal, jalankan `php artisan school:migrate-local-uploads`.
 
 ### B. Mulai database baru
 
@@ -113,7 +115,7 @@ service cloud.firestore {
 
 Semua akses pengguna melewati Laravel, termasuk login dan pengunduhan dokumen. Service account server mendapat akses melalui IAM. Firebase Authentication dan konfigurasi Firebase JavaScript di browser tidak diperlukan untuk implementasi ini.
 
-Jika Firebase CLI sudah terpasang, rules dan pengecualian indeks dapat diterapkan dengan:
+Jika Firebase CLI sudah terpasang, rules dan pengecualian indeks (termasuk untuk payload chunk yang tidak perlu diindeks) dapat diterapkan dengan:
 
 ```text
 firebase deploy --only firestore:rules,firestore:indexes --project PROJECT_ID_ANDA
@@ -142,11 +144,11 @@ Koleksi utama: `admins`, `content`, `applications`, dan `visits`. Daftar admin m
 | Akun lokal tidak bisa masuk setelah beralih | Jalankan import, atau buat akun pemilik di Firestore |
 | Kuota habis | Periksa Usage; tunggu pembaruan kuota atau evaluasi kebutuhan kapasitas |
 
-Detail kesalahan tersedia di `storage/logs/laravel.log`; log dapat mengandung informasi aplikasi, jadi jangan dipublikasikan. Aplikasi tidak berpindah diam-diam ke SQLite ketika Firestore gagal. Untuk kembali ke data lokal, ubah `SCHOOL_STORE=sqlite` dan jalankan `artisan optimize:clear`; perubahan cloud setelah import tidak otomatis tersalin kembali.
+Detail kesalahan tersedia di `storage/logs/laravel.log`; log dapat mengandung informasi aplikasi, jadi jangan dipublikasikan. Aplikasi tidak berpindah diam-diam ke SQLite ketika Firebase gagal. SQLite hanya digunakan untuk tes dan impor lama.
 
 ## Saat dipasang di hosting
 
-Firestore gratis adalah layanan database. Laravel tetap membutuhkan server PHP dan penyimpanan berkas yang menetap. Firebase Hosting menyajikan konten statis, sedangkan pemrosesan dinamis memerlukan backend tambahan. [Kemampuan Firebase Hosting](https://firebase.google.com/docs/hosting).
+Firestore menyimpan data dan berkas; tidak ada file permanen yang ditulis ke filesystem server sementara.
 
 Gunakan hosting PHP 8.2+ dengan document root `public` dan konfigurasi:
 
@@ -157,6 +159,6 @@ APP_URL=https://domain-sekolah-anda
 SESSION_SECURE_COOKIE=true
 ```
 
-Pertahankan `APP_KEY`, simpan kunci Firebase secara privat, dan pastikan `storage` serta `bootstrap/cache` dapat ditulis PHP. Gunakan `upload_max_filesize=5M` dan `post_max_size=20M`. Jalankan `php artisan schedule:run` setiap menit agar unggahan pendaftaran yang tidak selesai dibersihkan setelah dua hari. Simpan backup database dan berkas privat sesuai kebutuhan sekolah.
+Pertahankan `APP_KEY` dan simpan kunci Firebase secara privat. Untuk deployment pada Vercel, gunakan konfigurasi khusus pada [panduan Vercel](VERCEL_FIREBASE.md), termasuk batas upload 1 MB per dokumen pendaftaran.
 
-Jika memakai lebih dari satu server Laravel, siapkan session, cache, lock, dan penyimpanan berkas bersama. Konfigurasi bawaan memakai satu server dengan disk lokal.
+Session, cache, database, dan berkas memakai layanan cloud sehingga tetap tersedia setelah instance/serverless function berganti.
