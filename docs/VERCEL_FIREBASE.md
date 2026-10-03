@@ -73,8 +73,8 @@ Jangan mengatur `FIREBASE_CREDENTIALS` ke path file Windows pada Vercel. Jangan 
 
 2. Push proyek ke repository Git pribadi. Pastikan `git status` tidak menampilkan `.env` atau file service account.
 3. Di Vercel pilih **Add New → Project**, lalu impor repository.
-4. Pilih **Framework Preset: Other**.
-5. Biarkan **Build Command** dan **Output Directory** kosong. Community runtime akan menjalankan Composer berdasarkan `composer.json`.
+4. Pilih **Framework Preset: Other**. `vercel.json` juga menetapkan preset `other` agar Vercel tidak menganggap aplikasi Laravel ini sebagai Vite dan mencari folder `dist`.
+5. Pada **Settings → Build and Deployment**, hapus nilai `dist` dari **Output Directory** (matikan override bila aktif) dan kosongkan **Build Command**. Jangan set output ke `dist` atau `public`; `vercel.json` mengatur rute serverless dan aset aplikasi.
 6. Masukkan semua environment variables pada langkah 4.
 7. Jalankan deployment.
 
