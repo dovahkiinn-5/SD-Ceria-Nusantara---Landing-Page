@@ -27,6 +27,33 @@ Artisan::command('school:admin {email} {--name=Administrator}', function (Docume
     $this->info('Akun pemilik berhasil dibuat. Masuk melalui /admin/login.');
 })->purpose('Buat akun pemilik tanpa kata sandi bawaan');
 
+Artisan::command('school:admin-reset-password {email}', function (DocumentStore $store) {
+    $email = mb_strtolower(trim($this->argument('email')));
+    $validator = Validator::make(['email'=>$email], ['email'=>'required|email|max:190']);
+    if ($validator->fails()) { foreach($validator->errors()->all() as $error) $this->error($error); return 1; }
+
+    $id = hash('sha256', $email);
+    $record = $store->get('admins', $id);
+    if (! $record || mb_strtolower(trim($record['email'] ?? '')) !== $email) {
+        $this->error('Akun admin tidak ditemukan.');
+        return 1;
+    }
+
+    $password = $this->secret('Kata sandi baru (minimal 12 karakter, huruf dan angka)');
+    $confirmation = $this->secret('Ulangi kata sandi baru');
+    $validator = Validator::make([
+        'password'=>$password,
+        'password_confirmation'=>$confirmation,
+    ], [
+        'password'=>['required','confirmed',\Illuminate\Validation\Rules\Password::min(12)->letters()->numbers()],
+    ]);
+    if ($validator->fails()) { foreach($validator->errors()->all() as $error) $this->error($error); return 1; }
+
+    $record['password'] = Hash::make($password);
+    $store->put('admins', $id, $record);
+    $this->info('Kata sandi akun admin berhasil direset.');
+})->purpose('Reset kata sandi akun admin yang sudah ada');
+
 Artisan::command('school:firebase-check', function () {
     if (config('school.store') !== 'firestore') { $this->error('Atur SCHOOL_STORE=firestore terlebih dahulu.'); return 1; }
     try {

@@ -44,6 +44,10 @@
     <div class="footer-contact"><p><a href="mailto:{{ $site['settings']['email'] }}">{{ $site['settings']['email'] }}</a> • <a href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener">WA {{ $site['settings']['whatsapp'] }}</a></p><p>{{ $site['settings']['address'] }}</p><p>{{ $site['settings']['hours'] }}</p></div>
     @if(($page ?? '') === 'home')<div class="footer-bottom"><span>© {{ date('Y') }} SD Ceria Nusantara. Hak cipta dilindungi.</span><span><a href="{{ route('privacy') }}">Privasi</a> • <a href="{{ route('terms') }}">Syarat & Ketentuan</a></span></div>@endif
 </div></footer>
+<a class="whatsapp-float" data-whatsapp-float href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener" aria-label="Tanya via WhatsApp" title="Tanya via WhatsApp">
+    <img src="/assets/design/whatsapp.svg" alt="" width="38" height="38">
+    <span>Tanya via WhatsApp</span>
+</a>
 <dialog id="image-dialog" class="image-dialog"><button class="dialog-close" type="button" aria-label="Tutup gambar">×</button><img alt=""><p></p></dialog>
 @stack('scripts')
 </body></html>
