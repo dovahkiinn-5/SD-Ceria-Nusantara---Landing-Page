@@ -52,16 +52,7 @@ const heroSlider = document.querySelector('[data-hero-slider]');
 if (heroSlider) {
     const slides = [...heroSlider.querySelectorAll('.hero-slide')];
     let activeIndex = Math.max(0, slides.findIndex(slide => slide.classList.contains('is-active')));
-    let pausedByUser = reduceMotion;
     let timer;
-    const playbackButton = heroSlider.querySelector('[data-hero-toggle]');
-
-    const syncPlaybackButton = () => {
-        if (!playbackButton) return;
-        playbackButton.hidden = false;
-        playbackButton.textContent = pausedByUser ? 'Lanjutkan' : 'Jeda';
-        playbackButton.setAttribute('aria-label', `${pausedByUser ? 'Lanjutkan' : 'Jeda'} tayangan gambar`);
-    };
 
     const showSlide = index => {
         activeIndex = (index + slides.length) % slides.length;
@@ -83,24 +74,10 @@ if (heroSlider) {
     };
     const startAutoplay = () => {
         stopAutoplay();
-        if (pausedByUser || document.hidden || slides.length < 2
-            || heroSlider.matches(':hover') || heroSlider.contains(document.activeElement)) return;
+        if (reduceMotion || document.hidden || slides.length < 2) return;
         timer = window.setInterval(() => showSlide(activeIndex + 1), 5500);
     };
 
-    syncPlaybackButton();
-    playbackButton?.addEventListener('click', () => {
-        pausedByUser = !pausedByUser;
-        syncPlaybackButton();
-        if (pausedByUser) stopAutoplay();
-        else startAutoplay();
-    });
-    heroSlider.addEventListener('pointerenter', stopAutoplay);
-    heroSlider.addEventListener('pointerleave', startAutoplay);
-    heroSlider.addEventListener('focusin', stopAutoplay);
-    heroSlider.addEventListener('focusout', event => {
-        if (!heroSlider.contains(event.relatedTarget)) startAutoplay();
-    });
     document.addEventListener('visibilitychange', startAutoplay);
     startAutoplay();
 }

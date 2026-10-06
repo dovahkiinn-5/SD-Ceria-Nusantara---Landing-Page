@@ -94,9 +94,8 @@ label{display:block;font-size:15px;font-weight:600}input,select,textarea{width:1
 .hero-slides .hero-slide.is-active{opacity:1;transform:scale(1);z-index:1}
 .hero-slides .hero-slide[src$="sd-ceria-nusantara-campus.png"].is-active{animation:campus-drift 10s ease-in-out alternate infinite}
 @keyframes campus-drift{to{translate:-.55% -.35%}}
-.hero-slider figcaption{z-index:3;display:flex;align-items:center;gap:10px;padding:8px 12px 8px 18px}
+.hero-slider figcaption{z-index:3}
 .hero-slider figcaption small{display:block;font-size:9px;font-weight:500;line-height:1.35}
-.hero-playback{padding:4px 8px;border:0;border-radius:8px;background:var(--light);color:var(--blue);font-size:10px;font-weight:600;line-height:1.4}
 .facility-mosaic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;aspect-ratio:3/2;border-radius:18px;overflow:visible}
 .facility-tile{position:relative;min-width:0;min-height:0;aspect-ratio:1;padding:0;border:0;border-radius:14px;overflow:hidden;background:var(--light);isolation:isolate}
 .facility-tile-image{position:absolute;inset:0;overflow:hidden}
@@ -118,7 +117,6 @@ label{display:block;font-size:15px;font-weight:600}input,select,textarea{width:1
 }
 @media(hover:hover) and (prefers-reduced-motion:no-preference){
     .hero-slider:hover .hero-slide.is-active{transform:scale(1.055)}
-    .hero-slider:hover .hero-slide[src$="sd-ceria-nusantara-campus.png"].is-active{animation-play-state:paused}
     .facility-tile:hover .facility-tile-image img,.facility-tile:focus-visible .facility-tile-image img{transform:scale(1.08)}
 }
 @media(prefers-reduced-motion:reduce){

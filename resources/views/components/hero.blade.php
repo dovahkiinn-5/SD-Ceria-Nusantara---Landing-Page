@@ -19,7 +19,7 @@
         @endif
         @unless($contact)
             @if($home)
-            <figcaption><span data-hero-caption>Kawasan SD Ceria Nusantara</span><button type="button" class="hero-playback" data-hero-toggle hidden>Jeda</button></figcaption>
+            <figcaption><span data-hero-caption>Kawasan SD Ceria Nusantara</span></figcaption>
             @else
             <figcaption>Belajar bersama</figcaption>
             @endif
