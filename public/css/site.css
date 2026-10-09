@@ -38,3 +38,89 @@ label{display:block;font-size:15px;font-weight:600}input,select,textarea{width:1
 @media(max-width:1000px){.desktop-only{display:none!important}.home-advantages .info-card,.home-programs .info-card{min-height:220px}.home-advantages .section-heading{margin-bottom:62px}.home-advantages .info-card h3{margin-top:24px}.home-programs .info-card h3{margin-top:24px}}
 @media(max-width:600px){.home-advantages .info-card,.home-programs .info-card{min-height:210px}.home-advantages .section-heading{margin-bottom:36px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+
+.motion-ready .motion-reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s cubic-bezier(.2,.7,.2,1);transition-delay:var(--motion-delay,0ms)}
+.motion-ready .motion-reveal.is-visible{opacity:1;transform:translateY(0)}
+.hero-home .hero-decoration:before{animation:hero-drift 18s ease-in-out infinite alternate}
+.hero-home .hero-decoration:after{animation:hero-wave 22s ease-in-out infinite alternate}
+@keyframes hero-drift{to{translate:0 -12px}}
+@keyframes hero-wave{to{translate:0 8px}}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+    .button{transition:filter .15s,transform .2s ease,box-shadow .2s ease}
+    .button:hover{filter:brightness(.97);transform:translateY(-2px);box-shadow:0 6px 14px #0b2e4e20}
+    .program-card,.info-card,.team-card,.testimonial{transition:transform .22s ease,box-shadow .22s ease}
+    .program-card:hover,.info-card:hover,.team-card:hover,.testimonial:hover{transform:translateY(-4px);box-shadow:0 10px 22px #0b2e4e14}
+    .image-zoom img{transition:transform .35s ease}
+    .image-zoom:hover img{transform:scale(1.025)}
+}
+@media(prefers-reduced-motion:reduce){
+    .motion-ready .motion-reveal{opacity:1;transform:none;transition:none}
+    .hero-home .hero-decoration:before,.hero-home .hero-decoration:after{animation:none}
+}
+.hero-home .hero-decoration:before{animation:hero-drift 18s ease-in-out infinite alternate,hero-morph 16s ease-in-out infinite alternate}
+.hero-home .hero-decoration:after{animation:hero-wave 22s ease-in-out infinite alternate,hero-wave-morph 18s ease-in-out infinite alternate}
+@keyframes hero-morph{
+    0%,100%{border-radius:50% 50% 46% 54% / 48% 52% 48% 52%}
+    50%{border-radius:46% 54% 52% 48% / 54% 46% 52% 48%}
+}
+@keyframes hero-wave-morph{
+    0%,100%{border-radius:40% 65% 0 0}
+    50%{border-radius:55% 48% 0 0}
+}
+.whatsapp-float{
+    position:fixed;right:20px;bottom:24px;z-index:20;
+    width:60px;height:60px;display:flex;align-items:center;justify-content:flex-start;gap:10px;
+    padding:9px;border-radius:999px;background:var(--blue);color:#fff;
+    box-shadow:0 8px 22px #0b2e4e35;
+    opacity:0;pointer-events:none;transform:translateX(calc(100% + 24px));
+    transition:transform .35s cubic-bezier(.2,.75,.25,1),opacity .25s ease,width .3s ease,box-shadow .2s ease;
+}
+.whatsapp-float.is-visible,.whatsapp-float:focus-visible{opacity:1;pointer-events:auto;transform:translateX(0)}
+.whatsapp-float img{width:42px;height:42px;max-width:none;flex:none}
+.whatsapp-float span{max-width:0;overflow:hidden;white-space:nowrap;opacity:0;font-size:13px;font-weight:600;transition:max-width .28s ease,opacity .18s ease}
+.whatsapp-float:hover,.whatsapp-float:focus-visible{width:212px;box-shadow:0 10px 26px #0b2e4e40}
+.whatsapp-float:hover span,.whatsapp-float:focus-visible span{max-width:140px;opacity:1}
+@media(hover:none),(pointer:coarse){
+    .whatsapp-float{opacity:1;pointer-events:auto;transform:translateX(0)}
+}
+@media(prefers-reduced-motion:reduce){
+    .hero-home .hero-decoration:before,.hero-home .hero-decoration:after{animation:none}
+    .whatsapp-float,.whatsapp-float span{transition:none}
+}
+.site-header{position:sticky;top:0;z-index:40;box-shadow:0 4px 14px #0b2e4e0d}
+.hero-slider{isolation:isolate}
+.hero-slides{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
+.hero-slides .hero-slide{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;opacity:0;transform:scale(1.015);transition:opacity .65s ease,transform 5.5s ease}
+.hero-slides .hero-slide.is-active{opacity:1;transform:scale(1);z-index:1}
+.hero-slides .hero-slide[src$="sd-ceria-nusantara-campus.png"].is-active{animation:campus-drift 10s ease-in-out alternate infinite}
+@keyframes campus-drift{to{translate:-.55% -.35%}}
+.hero-slider figcaption{z-index:3}
+.hero-slider figcaption small{display:block;font-size:9px;font-weight:500;line-height:1.35}
+.facility-mosaic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;aspect-ratio:3/2;border-radius:18px;overflow:visible}
+.facility-tile{position:relative;min-width:0;min-height:0;aspect-ratio:1;padding:0;border:0;border-radius:14px;overflow:hidden;background:var(--light);isolation:isolate}
+.facility-tile-image{position:absolute;inset:0;overflow:hidden}
+.facility-tile-image img{position:absolute;width:300%;height:200%;max-width:none;object-fit:fill;left:var(--crop-x);top:var(--crop-y);transform-origin:var(--crop-focus-x) var(--crop-focus-y);transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.facility-tile:after{content:'';position:absolute;inset:35% 0 0;background:linear-gradient(transparent,#082c49b8);opacity:.8;transition:opacity .25s ease}
+.facility-tile-label{position:absolute;left:12px;right:12px;bottom:10px;z-index:1;color:white;text-align:left;font-size:13px;font-weight:600;text-shadow:0 1px 4px #082c49a6}
+.facility-tile:hover:after,.facility-tile:focus-visible:after{opacity:1}
+.image-dialog.facility-crop{position:relative;width:min(80vw,700px);height:min(80vw,700px);padding:0;overflow:hidden;aspect-ratio:1}
+.image-dialog.facility-crop img{position:absolute;left:var(--crop-x);top:var(--crop-y);width:300%;height:200%;max-width:none;max-height:none;margin:0;object-fit:fill}
+.image-dialog.facility-crop p{position:absolute;left:0;right:0;bottom:0;margin:0;padding:14px;background:#fffffff0;font-weight:600}
+@media(max-width:600px){
+    .facility-mosaic{gap:5px}
+    .facility-tile{border-radius:10px}
+    .facility-tile-label{left:7px;right:5px;bottom:6px;font-size:10px}
+}
+@media(hover:none),(pointer:coarse){
+    .hero-slider .hero-slide.is-active{transform:scale(1)}
+    .facility-tile:after{opacity:.9}
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+    .hero-slider:hover .hero-slide.is-active{transform:scale(1.055)}
+    .facility-tile:hover .facility-tile-image img,.facility-tile:focus-visible .facility-tile-image img{transform:scale(1.08)}
+}
+@media(prefers-reduced-motion:reduce){
+    .hero-home .hero-decoration:before,.hero-home .hero-decoration:after{animation:none}
+    .hero-slides .hero-slide,.facility-tile-image img,.facility-tile:after{transition:none}
+    .hero-slides .hero-slide[src$="sd-ceria-nusantara-campus.png"].is-active{animation:none}
+}

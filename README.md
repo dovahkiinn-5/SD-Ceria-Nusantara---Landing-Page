@@ -33,6 +33,7 @@ Biarkan terminal server berjalan. Hentikan dengan Ctrl+C. Untuk port lain gunaka
 - Formulir permintaan kunjungan sekolah.
 - Admin untuk mengedit teks/gambar, meninjau pendaftar dan kunjungan, mengubah status/catatan, serta ekspor CSV.
 - Akun pemilik dan editor, perubahan kata sandi, dan penonaktifan akun. Penghapusan data dan pengelolaan akun dibatasi untuk pemilik.
+- Reset kata sandi akun admin yang sudah ada melalui perintah Artisan dengan input tersembunyi.
 - Pagination, cache konten, validasi server, CSRF, pembatasan percobaan login, dan password hash.
 
 Konfirmasi pendaftaran ditampilkan di website. Tautan WhatsApp/email membuka aplikasi terkait; pengiriman notifikasi otomatis belum dikonfigurasi.
@@ -48,6 +49,8 @@ composer run dev
 ```
 
 `setup` memasang dependensi, menyiapkan `.env`, membuat application key jika belum ada, dan mengisi konten awal ke Firestore. Untuk membuat akun pengelola baru, jalankan `php artisan school:admin admin@sekolah.sch.id --name="Admin Sekolah"` setelah Firebase terhubung. Perintah setup tidak membuat atau memigrasikan database SQL.
+
+Untuk mereset kata sandi akun admin yang sudah ada, jalankan `php artisan school:admin-reset-password admin@sekolah.sch.id`. Masukkan kata sandi baru dan konfirmasinya saat diminta; input tidak ditampilkan di terminal. Kata sandi minimal 12 karakter dan harus mengandung huruf serta angka. Perintah hanya mengubah hash kata sandi, bukan email, peran, atau status akun.
 
 Pada komputer ini Composer juga tersedia di `.tools/composer.phar`:
 

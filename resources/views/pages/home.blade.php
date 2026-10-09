@@ -4,7 +4,6 @@
 <div class="school-stats"><div><strong>{{ $site['settings']['students'] }}</strong><span>Siswa aktif</span></div><div><strong>{{ $site['settings']['teachers'] }}</strong><span>Guru & staf</span></div><div><strong>{{ $site['settings']['founded'] }}</strong><span>Tahun berdiri</span></div><div><strong>{{ $site['settings']['accreditation'] }}</strong><span>Akreditasi</span></div></div>
 <p class="stats-note">Mendampingi setiap anak tumbuh ceria dan percaya diri.</p>
 <div class="tablet-stats container"><x-cards :items="[['title'=>$site['settings']['students'].' siswa','text'=>'Bertumbuh bersama dalam komunitas sekolah.','icon'=>'users'],['title'=>'Sejak '.$site['settings']['founded'],'text'=>$site['settings']['teachers'].' pendidik dan staf mendampingi setiap anak.','icon'=>'home']]"/></div>
-<div class="whatsapp-row outer"><a class="whatsapp-pill" href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener"><img src="/assets/design/whatsapp.svg" alt="" width="30" height="30">Tanya via WhatsApp</a></div>
 <section class="home-profile section"><div class="container">
     <x-heading eyebrow="PROFIL SEKOLAH" :title="$site['home']['profile_title']" :subtitle="$site['home']['profile_subtitle']"/>
     <p class="profile-text desktop-only">{{ $site['home']['profile_text'] }}</p><p class="profile-text tablet-only">{{ $site['home']['tablet']['profile_text'] }}</p><div class="center profile-action"><a class="button blue" href="{{ route('about') }}">Kenali Sekolah Kami</a></div>
