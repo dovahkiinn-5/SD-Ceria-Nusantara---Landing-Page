@@ -43,6 +43,10 @@ document.querySelectorAll('form[data-single-submit]').forEach(form => form.addEv
         button.textContent = 'Mengirim…';
     });
 }));
+document.querySelectorAll('[data-upload] input[type=file]').forEach(input => input.addEventListener('change', () => {
+    const fileName = input.closest('[data-upload]').querySelector('[data-upload-name]');
+    if (fileName) fileName.textContent = input.files?.[0]?.name ?? 'Belum memilih berkas';
+}));
 document.querySelectorAll('[data-confirm]').forEach(form => form.addEventListener('submit', event => {
     if (!window.confirm(form.dataset.confirm)) event.preventDefault();
 }));
