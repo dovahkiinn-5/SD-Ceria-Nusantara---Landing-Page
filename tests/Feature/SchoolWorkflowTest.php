@@ -68,11 +68,39 @@ class SchoolWorkflowTest extends TestCase
         $this->assertSame(1,$store->count('applications'));
         $record=$store->get('applications',$reference);
         $this->assertSame('baru',$record['status']);
+        $this->assertCount(3,$record['documents']);
         $this->assertTrue(app(FakeFirestoreFileStorage::class)->exists($record['documents']['photo']['path']));
         $this->get('/pendaftaran/berhasil')->assertOk()->assertSee($reference);
         $this->get('/admin/berkas/'.$reference.'/photo')->assertRedirect('/admin/login');
         $this->get('/storage/'.$record['documents']['photo']['path'])->assertNotFound();
         $this->get('/admin/pendaftar/export')->assertRedirect('/admin/login');
+        $this->actingAs(new \Illuminate\Auth\GenericUser([
+            'id'=>'test-admin', 'name'=>'Admin Uji', 'email'=>'admin@example.test', 'role'=>'owner', 'active'=>true,
+            'password'=>'test-password-hash', 'remember_token'=>'',
+        ]));
+        $detail = $this->get('/admin/data/applications/'.$reference)->assertOk();
+        foreach ($record['documents'] as $field => $file) {
+            $detail->assertSee($file['name']);
+            $this->get('/admin/berkas/'.$reference.'/'.$field)
+                ->assertDownload($file['name'])
+                ->assertStreamedContent(app(FakeFirestoreFileStorage::class)->objects[$file['path']]);
+        }
+    }
+
+    public function test_submission_requires_every_document_to_remain_available(): void
+    {
+        $reference = $this->completeDraft();
+        $draft = session('registration');
+        $incomplete = $draft;
+        unset($incomplete['documents']['family_card']);
+        $this->withSession(['registration' => $incomplete])
+            ->post('/pendaftaran/kirim', ['consent' => '1'])
+            ->assertSessionHasErrors('documents');
+        $this->assertNull(app(DocumentStore::class)->get('applications', $reference));
+
+        app(FakeFirestoreFileStorage::class)->delete($draft['documents']['photo']['path']);
+        $this->withSession(['registration' => $draft])->post('/pendaftaran/kirim', ['consent' => '1'])->assertSessionHasErrors('documents');
+        $this->assertNull(app(DocumentStore::class)->get('applications', $reference));
     }
 
     public function test_invalid_file_types_and_oversized_files_are_rejected(): void
