@@ -109,8 +109,9 @@ class RegistrationController extends Controller
 
         $request->validate(['consent' => 'accepted']);
 
-        foreach ($draft['documents'] as $file) {
-            if (! $storage->exists($file['path'])) {
+        foreach (['birth_certificate', 'family_card', 'photo'] as $field) {
+            $file = $draft['documents'][$field] ?? null;
+            if (! $file || empty($file['path']) || ! $storage->exists($file['path'])) {
                 throw ValidationException::withMessages([
                     'documents' => 'Berkas tidak ditemukan. Silakan unggah kembali pada langkah 3.',
                 ]);
