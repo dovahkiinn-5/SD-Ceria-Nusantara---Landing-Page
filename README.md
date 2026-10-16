@@ -64,6 +64,8 @@ Untuk koneksi Firebase, ikuti [FIREBASE.md](docs/FIREBASE.md). Untuk sumber desa
 
 ## Data dan berkas
 
+Lihat [dokumentasi database per node](docs/DATABASE.md) untuk struktur koleksi, field, relasi berkas, dan runtime, serta [konten awal lengkap setiap node](docs/DATABASE-CONTENT.md) untuk nilai teks, gambar, dan daftar bersarang.
+
 | Lokasi | Isi |
 | --- | --- |
 | Firebase Firestore | Konten, akun, pendaftaran, kunjungan, session, cache, dan blob berkas privat |
