@@ -1,4 +1,12 @@
 const toggle = document.querySelector('.menu-toggle');
+document.querySelectorAll('[data-hero-motion]').forEach(button => {
+    button.addEventListener('click', () => {
+        const paused = button.closest('.hero').classList.toggle('is-motion-paused');
+        button.setAttribute('aria-pressed', String(paused));
+        button.setAttribute('aria-label', paused ? 'Putar animasi dekorasi' : 'Jeda animasi dekorasi');
+        button.innerHTML = paused ? '▷ <span>Putar animasi</span>' : 'Ⅱ <span>Jeda animasi</span>';
+    });
+});
 const navigation = document.querySelector('#navigation');
 toggle?.addEventListener('click', () => {
     const open = toggle.getAttribute('aria-expanded') !== 'true';
@@ -52,6 +60,42 @@ document.querySelectorAll('[data-confirm]').forEach(form => form.addEventListene
 }));
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ambientPointer = window.matchMedia('(hover: hover) and (pointer: fine)');
+const ambientMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+document.querySelectorAll('.team-card').forEach(card => {
+    let frame;
+    let pointerX = 0;
+    let pointerY = 0;
+
+    const updateLight = event => {
+        if (!ambientPointer.matches || event.pointerType === 'touch') return;
+        card.classList.add('has-ambient-light');
+        if (ambientMotion.matches) return;
+        pointerX = event.clientX;
+        pointerY = event.clientY;
+        if (frame) return;
+        frame = window.requestAnimationFrame(() => {
+            const bounds = card.getBoundingClientRect();
+            card.style.setProperty('--ambient-x', `${pointerX - bounds.left}px`);
+            card.style.setProperty('--ambient-y', `${pointerY - bounds.top}px`);
+            frame = undefined;
+        });
+    };
+    const hideLight = () => {
+        window.cancelAnimationFrame(frame);
+        frame = undefined;
+        card.classList.remove('has-ambient-light');
+        card.style.removeProperty('--ambient-x');
+        card.style.removeProperty('--ambient-y');
+    };
+
+    card.addEventListener('pointerenter', updateLight, { passive: true });
+    card.addEventListener('pointermove', updateLight, { passive: true });
+    card.addEventListener('pointerleave', hideLight);
+    card.addEventListener('pointercancel', hideLight);
+    ambientPointer.addEventListener('change', hideLight);
+    ambientMotion.addEventListener('change', hideLight);
+});
 const heroSlider = document.querySelector('[data-hero-slider]');
 if (heroSlider) {
     const slides = [...heroSlider.querySelectorAll('.hero-slide')];

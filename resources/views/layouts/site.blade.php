@@ -8,6 +8,7 @@
     <link rel="icon" href="{{ $site['settings']['logo'] }}" type="image/png">
     <link rel="preload" href="/assets/fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="/css/hero-motion.css">
     @if(($page ?? '') === 'teachers')<link rel="stylesheet" href="/css/team-directory.css">@endif
     @if(($page ?? '') === 'registration')<link rel="stylesheet" href="/css/registration.css">@endif
     <script src="/js/site.js" defer></script>
