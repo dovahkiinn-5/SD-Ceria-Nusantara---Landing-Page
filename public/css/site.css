@@ -87,6 +87,17 @@ label{display:block;font-size:15px;font-weight:600}input,select,textarea{width:1
     .hero-home .hero-decoration:before,.hero-home .hero-decoration:after{animation:none}
     .whatsapp-float,.whatsapp-float span{transition:none}
 }
+/* Cursor-following ambient light on teacher and staff profiles. */
+.team-card{position:relative;isolation:isolate}
+.team-card::before,.team-card::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s ease}
+.team-card::before{z-index:-1;background:radial-gradient(260px circle at var(--ambient-x,50%) var(--ambient-y,50%),#41c7ed66,transparent 75%);filter:blur(18px);inset:-10px}
+.team-card::after{z-index:1;background:radial-gradient(240px circle at var(--ambient-x,50%) var(--ambient-y,50%),#61d9f52e,transparent 72%);box-shadow:inset 0 0 0 1px #58cde66b}
+@media(hover:hover) and (pointer:fine){
+    .team-card.has-ambient-light::before,.team-card.has-ambient-light::after{opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+    .team-card::before,.team-card::after{transition:none}
+}
 .site-header{position:sticky;top:0;z-index:40;box-shadow:0 4px 14px #0b2e4e0d}
 .hero-slider{isolation:isolate}
 .hero-slides{position:absolute;inset:0;overflow:hidden;border-radius:inherit}
