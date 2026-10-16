@@ -1034,6 +1034,12 @@
     transform: translateY(-2px);
 }
 
+.page-registration .upload-dropzone.is-dragging,
+.page-registration .upload-dropzone.is-ready {
+    border-color: #3ca5b7;
+    background-color: #edfafa;
+}
+
 .page-registration .upload-icon {
     display: grid;
     width: 43px;
@@ -1100,6 +1106,144 @@
     color: #438064;
     font-size: 10px;
     line-height: 1.5;
+}
+
+.page-registration .upload-preview {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    width: min(100%, 280px);
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+    padding: 8px;
+    border: 1px solid #c8e4e5;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .88);
+    text-align: left;
+}
+
+.page-registration .upload-preview[hidden],
+.page-registration .upload-preview [hidden] {
+    display: none;
+}
+
+.page-registration .upload-preview-visual {
+    display: grid;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #e8f5f7;
+}
+
+.page-registration .upload-preview-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.page-registration .upload-preview-document {
+    color: #176a7e;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.page-registration .upload-preview-copy {
+    min-width: 0;
+}
+
+.page-registration .upload-preview-copy strong,
+.page-registration .upload-preview-copy small {
+    display: block;
+}
+
+.page-registration .upload-preview-copy strong {
+    color: #347c65;
+    font-size: 10px;
+}
+
+.page-registration .upload-preview-copy small {
+    overflow: hidden;
+    margin-top: 3px;
+    color: #718995;
+    font-size: 9px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.page-registration .domicile-distance {
+    display: flex;
+    gap: 14px;
+    margin-top: 18px;
+    padding: 18px;
+    border: 1px solid #cfe5e9;
+    border-radius: 17px;
+    background: linear-gradient(135deg, #f3fbfb, #fffdf5);
+}
+
+.page-registration .domicile-distance-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    place-items: center;
+    border-radius: 13px;
+    background: #fff0bf;
+    font-size: 19px;
+}
+
+.page-registration .domicile-distance-copy {
+    min-width: 0;
+}
+
+.page-registration .domicile-distance-copy>strong {
+    color: #164f68;
+    font-size: 13px;
+}
+
+.page-registration .domicile-distance-copy>p {
+    margin: 5px 0 0;
+    color: #6d838e;
+    font-size: 10px;
+    line-height: 1.65;
+}
+
+.page-registration .domicile-distance-result {
+    font-weight: 600;
+}
+
+.page-registration .domicile-distance-result.is-success {
+    color: #2f775b;
+}
+
+.page-registration .domicile-distance-result.is-error {
+    color: #9b4c45;
+}
+
+.page-registration .domicile-distance-result.is-loading {
+    color: #176a7e;
+}
+
+.page-registration .domicile-distance-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.page-registration .domicile-distance-actions .button {
+    min-height: 40px;
+    padding: 9px 15px;
+    font-size: 10px;
+}
+
+.page-registration .domicile-distance-actions .text-link {
+    font-size: 10px;
 }
 
 .page-registration .upload-reminder {
@@ -1558,5 +1702,106 @@
 
     .page-registration .registration-form .form-actions>small {
         font-size: 9px;
+    }
+}
+
+/* Liquid glass treatment for registration navigation actions. */
+.page-registration .registration-form .action-buttons .liquid-glass-button {
+    --liquid-x: 50%;
+    --liquid-y: 50%;
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    min-height: 54px;
+    padding-inline: 34px;
+    border: 2px solid rgba(142, 194, 209, .82);
+    border-radius: 18px;
+    background:
+        radial-gradient(170px circle at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, .96) 0, rgba(154, 232, 238, .12) 28%, rgba(255, 217, 76, .06) 54%, transparent 72%),
+        linear-gradient(135deg, rgba(255, 255, 255, .98), rgba(247, 252, 253, .88));
+    color: #082f4e;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .94),
+        inset 0 -1px 0 rgba(13, 91, 119, .12),
+        0 10px 24px rgba(16, 112, 142, .13),
+        0 2px 5px rgba(26, 75, 94, .08);
+    backdrop-filter: blur(16px) saturate(155%);
+    -webkit-backdrop-filter: blur(16px) saturate(155%);
+    transform: translateY(0);
+    transition: transform .24s cubic-bezier(.2, .8, .2, 1), box-shadow .24s ease, border-color .24s ease;
+}
+
+.page-registration .registration-form .action-buttons .liquid-glass-button::before {
+    position: absolute;
+    z-index: -1;
+    left: var(--liquid-x);
+    top: var(--liquid-y);
+    width: 190px;
+    height: 190px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, .96), rgba(92, 213, 229, .44) 36%, transparent 68%);
+    content: "";
+    opacity: .08;
+    pointer-events: none;
+    transform: translate(-50%, -50%) scale(.7);
+    transition: left .08s linear, top .08s linear, opacity .24s ease, transform .24s ease;
+}
+
+.page-registration .registration-form .action-buttons .liquid-glass-button::after {
+    position: absolute;
+    inset: 1px 10px auto;
+    height: 43%;
+    border-radius: 15px 15px 50% 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .58), rgba(255, 255, 255, 0));
+    content: "";
+    opacity: .68;
+    pointer-events: none;
+}
+
+.page-registration .registration-form .action-buttons .liquid-glass-button:hover,
+.page-registration .registration-form .action-buttons .liquid-glass-button.is-liquid-active {
+    border-color: rgba(73, 183, 207, .88);
+    background:
+        radial-gradient(170px circle at var(--liquid-x) var(--liquid-y), rgba(255, 255, 255, .96) 0, rgba(154, 232, 238, .72) 26%, rgba(255, 217, 76, .28) 54%, transparent 72%),
+        linear-gradient(135deg, rgba(255, 255, 255, .96), rgba(245, 251, 252, .82));
+    box-shadow:
+        inset 0 1px 0 #fff,
+        inset 0 -1px 0 rgba(13, 91, 119, .1),
+        0 14px 30px rgba(21, 132, 159, .24),
+        0 4px 9px rgba(208, 158, 22, .18);
+    filter: none;
+    transform: translateY(-2px);
+}
+
+.page-registration .registration-form .action-buttons .liquid-glass-button.is-liquid-active::before {
+    opacity: .9;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.page-registration .registration-form .action-buttons .liquid-glass-button:active {
+    box-shadow: inset 0 2px 8px rgba(14, 78, 102, .15), 0 5px 12px rgba(16, 112, 142, .16);
+    transform: translateY(1px) scale(.995);
+}
+
+.page-registration .registration-form .action-buttons .liquid-glass-button:focus-visible {
+    outline: 3px solid #12a7c5;
+    outline-offset: 4px;
+}
+
+@media (hover: none), (pointer: coarse) {
+    .page-registration .registration-form .action-buttons .liquid-glass-button::before {
+        opacity: .62;
+        transform: translate(-50%, -50%) scale(.9);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-registration .registration-form .action-buttons .liquid-glass-button,
+    .page-registration .registration-form .action-buttons .liquid-glass-button::before {
+        transition: none;
+    }
+
+    .page-registration .registration-form .action-buttons .liquid-glass-button:hover {
+        transform: none;
     }
 }

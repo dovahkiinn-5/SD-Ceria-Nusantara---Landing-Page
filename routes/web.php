@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\VisitController;
@@ -22,6 +23,8 @@ Route::get('/media/{filename}', function (string $filename, FirestoreFileStorage
         'X-Content-Type-Options' => 'nosniff',
     ]);
 })->name('media');
+Route::get('/pengumuman',[AnnouncementController::class,'show'])->name('announcement');
+Route::post('/pengumuman',[AnnouncementController::class,'lookup'])->middleware('throttle:announcements')->name('announcement.lookup');
 Route::get('/pendaftaran/berhasil',[RegistrationController::class,'success'])->name('registration.success');
 Route::get('/pendaftaran/{step?}',[RegistrationController::class,'show'])->where('step','[1-4]')->name('registration');
 Route::post('/pendaftaran/langkah/{step}',[RegistrationController::class,'save'])->where('step','[1-3]')->middleware('throttle:submissions')->block(20,20)->name('registration.save');

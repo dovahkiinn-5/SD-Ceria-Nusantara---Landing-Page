@@ -40,7 +40,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "@php -d upload_max_filesize=1M -d post_max_size=4M -S 127.0.0.1:8000 -t public tools/serve-router.php"
+            "@php -d upload_max_filesize=1M -d post_max_size=6M -S 127.0.0.1:8000 -t public tools/serve-router.php"
         ],
         "test": [
             "@php artisan config:clear --ansi",

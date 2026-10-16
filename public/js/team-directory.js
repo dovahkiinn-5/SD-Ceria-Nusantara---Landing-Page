@@ -24,4 +24,39 @@
         update();
     }));
     search?.addEventListener('input', update);
+
+    const organizationCards = [...document.querySelectorAll('[data-organization-person]')];
+    const setPhotoVisible = (card, visible) => {
+        const name = card.dataset.organizationName;
+        const role = card.dataset.organizationRole;
+        card.classList.toggle('is-photo-visible', visible);
+        card.setAttribute('aria-pressed', String(visible));
+        card.setAttribute('aria-label', `${visible ? 'Sembunyikan' : 'Tampilkan'} foto ${name}, ${role}`);
+    };
+    const closeOrganizationPhotos = except => {
+        organizationCards.forEach(card => {
+            if (card !== except) setPhotoVisible(card, false);
+        });
+    };
+
+    organizationCards.forEach(card => {
+        card.addEventListener('click', () => {
+            const willShow = card.getAttribute('aria-pressed') !== 'true';
+            closeOrganizationPhotos(card);
+            setPhotoVisible(card, willShow);
+        });
+        card.addEventListener('blur', () => {
+            if (!card.matches(':hover')) setPhotoVisible(card, false);
+        });
+    });
+
+    document.addEventListener('pointerdown', event => {
+        if (!event.target.closest('[data-organization-person]')) closeOrganizationPhotos();
+    }, { passive: true });
+    document.addEventListener('keydown', event => {
+        if (event.key !== 'Escape') return;
+        const activeCard = document.activeElement?.closest?.('[data-organization-person]');
+        closeOrganizationPhotos();
+        activeCard?.blur();
+    });
 })();

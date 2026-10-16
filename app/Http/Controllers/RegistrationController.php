@@ -12,6 +12,13 @@ use Illuminate\Validation\ValidationException;
 
 class RegistrationController extends Controller
 {
+    private const DOCUMENT_FIELDS = [
+        'birth_certificate',
+        'family_card',
+        'child_identity_card',
+        'photo',
+    ];
+
     private function initialize(Request $request): array
     {
         if (! $request->session()->has('registration')) {
@@ -54,14 +61,31 @@ class RegistrationController extends Controller
                 'previous_school' => 'nullable|string|max:180', 'support_needs' => 'nullable|string|max:1000',
             ]);
         } elseif ($step === 2) {
-            $draft['parent'] = $request->validate([
+            $parent = $request->validate([
                 'parent_name' => 'required|string|max:120', 'relationship' => ['required', Rule::in(['Ayah', 'Ibu', 'Wali'])],
                 'phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{9,25}$/'], 'email' => 'required|email|max:190',
                 'address' => 'nullable|string|max:1000', 'emergency_contact' => ['nullable', 'string', 'regex:/^\+?[0-9 ()-]{9,25}$/'],
+                'domicile_latitude' => 'nullable|required_with:domicile_longitude|numeric|between:-90,90',
+                'domicile_longitude' => 'nullable|required_with:domicile_latitude|numeric|between:-180,180',
             ]);
+
+            if (isset($parent['domicile_latitude'], $parent['domicile_longitude'])) {
+                $parent['domicile_latitude'] = (float) $parent['domicile_latitude'];
+                $parent['domicile_longitude'] = (float) $parent['domicile_longitude'];
+                $parent['domicile_distance_km'] = $this->distanceInKm(
+                    $parent['domicile_latitude'],
+                    $parent['domicile_longitude'],
+                    (float) config('school.latitude'),
+                    (float) config('school.longitude'),
+                );
+            } else {
+                unset($parent['domicile_latitude'], $parent['domicile_longitude']);
+            }
+
+            $draft['parent'] = $parent;
         } else {
             $rules = [];
-            foreach (['birth_certificate', 'family_card', 'photo'] as $field) {
+            foreach (self::DOCUMENT_FIELDS as $field) {
                 $rules[$field] = [
                     isset($draft['documents'][$field]) ? 'nullable' : 'required',
                     'file', 'max:1024',
@@ -109,7 +133,7 @@ class RegistrationController extends Controller
 
         $request->validate(['consent' => 'accepted']);
 
-        foreach (['birth_certificate', 'family_card', 'photo'] as $field) {
+        foreach (self::DOCUMENT_FIELDS as $field) {
             $file = $draft['documents'][$field] ?? null;
             if (! $file || empty($file['path']) || ! $storage->exists($file['path'])) {
                 throw ValidationException::withMessages([
@@ -147,5 +171,18 @@ class RegistrationController extends Controller
             'site' => $content->all(), 'page' => 'registration',
             'reference' => $request->session()->get('registration_success'),
         ]);
+    }
+
+    private function distanceInKm(float $fromLatitude, float $fromLongitude, float $toLatitude, float $toLongitude): float
+    {
+        $latitudeDelta = deg2rad($toLatitude - $fromLatitude);
+        $longitudeDelta = deg2rad($toLongitude - $fromLongitude);
+        $fromLatitude = deg2rad($fromLatitude);
+        $toLatitude = deg2rad($toLatitude);
+
+        $haversine = sin($latitudeDelta / 2) ** 2
+            + cos($fromLatitude) * cos($toLatitude) * sin($longitudeDelta / 2) ** 2;
+
+        return round(6371.0088 * 2 * atan2(sqrt($haversine), sqrt(1 - $haversine)), 2);
     }
 }

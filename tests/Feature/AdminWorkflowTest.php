@@ -70,19 +70,29 @@ class AdminWorkflowTest extends TestCase
     {
         $storage = app(FakeFirestoreFileStorage::class);
         $storage->put('applications/test/photo.png','test-image','image/png');
+        $storage->put('applications/test/kia.pdf','test-kia','application/pdf');
         $store=app(DocumentStore::class);
-        $store->put('applications','CN-TEST',['reference'=>'CN-TEST','child'=>['child_name'=>'=DANGEROUS()','birth_date'=>'2019-01-01'],'parent'=>['parent_name'=>'Wali','phone'=>'+628123456789','email'=>'wali@example.test'],'created_at'=>now()->toIso8601String(),'status'=>'baru','documents'=>['photo'=>['path'=>'applications/test/photo.png','name'=>'foto.png']]]);
+        $store->put('applications','CN-TEST',['reference'=>'CN-TEST','child'=>['child_name'=>'=DANGEROUS()','birth_date'=>'2019-01-01'],'parent'=>['parent_name'=>'Wali','phone'=>'+628123456789','email'=>'wali@example.test','address'=>'Alamat uji CSV','domicile_distance_km'=>0.0],'created_at'=>now()->toIso8601String(),'status'=>'baru','documents'=>['photo'=>['path'=>'applications/test/photo.png','name'=>'foto.png'],'child_identity_card'=>['path'=>'applications/test/kia.pdf','name'=>'kia.pdf']]]);
         $this->login();
         $this->get('/admin/data/applications/CN-TEST')->assertOk();
         $this->patch('/admin/data/applications/CN-TEST',['status'=>'diterima','admin_notes'=>'Lengkap'])->assertRedirect();
         $this->assertSame('diterima',$store->get('applications','CN-TEST')['status']);
         $this->patch('/admin/data/applications/CN-TEST',['status'=>'unknown'])->assertSessionHasErrors('status');
         $this->get('/admin/berkas/CN-TEST/photo')->assertDownload('foto.png')->assertStreamedContent('test-image');
+        $this->get('/admin/berkas/CN-TEST/child_identity_card')->assertDownload('kia.pdf')->assertStreamedContent('test-kia');
         $csv=$this->get('/admin/pendaftar/export')->assertOk()->streamedContent();
         $this->assertStringContainsString("'=DANGEROUS()",$csv);
+        $rows=array_values(array_filter(preg_split('/\R/',$csv)));
+        $headers=str_getcsv(ltrim($rows[0],"\xEF\xBB\xBF"));
+        $data=str_getcsv($rows[1]);
+        $this->assertSame('Alamat domisili',$headers[6]);
+        $this->assertSame('Jarak ke sekolah (km)',$headers[7]);
+        $this->assertSame('Alamat uji CSV',$data[6]);
+        $this->assertSame('0',$data[7]);
         $this->delete('/admin/data/applications/CN-TEST')->assertRedirect('/admin/data/applications');
         $this->assertNull($store->get('applications','CN-TEST'));
         $this->assertFalse($storage->exists('applications/test/photo.png'));
+        $this->assertFalse($storage->exists('applications/test/kia.pdf'));
     }
     public function test_password_change_preserves_current_session_and_hashes_password(): void
     {

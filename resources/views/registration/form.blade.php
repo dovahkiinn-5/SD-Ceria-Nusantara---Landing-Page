@@ -8,6 +8,12 @@
         4 => 'Periksa sekali lagi. Pastikan semua informasi sudah sesuai sebelum dikirim.',
     ];
     $stepIcons = [1 => '🎒', 2 => '💌', 3 => '📚', 4 => '🌟'];
+    $documentFields = [
+        'birth_certificate' => ['label' => 'Akta kelahiran', 'icon' => '📄'],
+        'family_card' => ['label' => 'Kartu Keluarga', 'icon' => '📄'],
+        'child_identity_card' => ['label' => 'Kartu Identitas Anak (KIA)', 'icon' => '🪪'],
+        'photo' => ['label' => 'Pas foto anak', 'icon' => '🖼️'],
+    ];
     $hideCta = true;
 @endphp
 @section('title','Langkah '.$step.' — '.$labels[$step].' | SD Ceria Nusantara')
@@ -106,7 +112,7 @@
             <div><h3>Supaya mudah dihubungi</h3><p>Kontak ini dipakai untuk kabar pendaftaran.</p></div>
         </header>
         <div class="registration-group-fields">
-            <label class="registration-field"><span class="field-label-row"><span>Nomor WhatsApp <b>*</b></span></span><input type="tel" name="phone" value="{{ old('phone',$draft['parent']['phone'] ?? '') }}" placeholder="Contoh: +6281234567890" required maxlength="25" autocomplete="tel"></label>
+            <label class="registration-field"><span class="field-label-row"><span>Nomor WhatsApp <b>*</b></span></span><input type="tel" name="phone" value="{{ old('phone',$draft['parent']['phone'] ?? '') }}" placeholder="Contoh: +6285770001234" required maxlength="25" autocomplete="tel"></label>
             <label class="registration-field"><span class="field-label-row"><span>Alamat email <b>*</b></span></span><input type="email" name="email" value="{{ old('email',$draft['parent']['email'] ?? '') }}" placeholder="nama@email.com" required maxlength="190" autocomplete="email"></label>
         </div>
     </section>
@@ -119,24 +125,42 @@
             <label class="registration-field"><span class="field-label-row"><span>Alamat domisili</span></span><input name="address" value="{{ old('address',$draft['parent']['address'] ?? '') }}" placeholder="Jalan, nomor rumah, kelurahan..." maxlength="1000" autocomplete="street-address"></label>
             <label class="registration-field"><span class="field-label-row"><span>Kontak darurat</span></span><input type="tel" name="emergency_contact" value="{{ old('emergency_contact',$draft['parent']['emergency_contact'] ?? '') }}" placeholder="Nomor keluarga yang bisa dihubungi" maxlength="25"></label>
         </div>
+        <div class="domicile-distance" data-distance-calculator data-school-latitude="{{ config('school.latitude') }}" data-school-longitude="{{ config('school.longitude') }}" data-existing-distance="{{ $draft['parent']['domicile_distance_km'] ?? '' }}">
+            <input type="hidden" name="domicile_latitude" value="{{ old('domicile_latitude',$draft['parent']['domicile_latitude'] ?? '') }}" data-domicile-latitude>
+            <input type="hidden" name="domicile_longitude" value="{{ old('domicile_longitude',$draft['parent']['domicile_longitude'] ?? '') }}" data-domicile-longitude>
+            <span class="domicile-distance-icon" aria-hidden="true">📍</span>
+            <div class="domicile-distance-copy">
+                <strong>Jarak domisili ke sekolah</strong>
+                <p>Kami menghitung jarak garis lurus dari lokasi perangkat ke SD Ceria Nusantara. Lokasi hanya diminta setelah tombol ditekan.</p>
+                <p class="domicile-distance-result{{ isset($draft['parent']['domicile_distance_km']) ? ' is-success' : '' }}" data-distance-status aria-live="polite">
+                    @isset($draft['parent']['domicile_distance_km'])Jarak tersimpan: {{ number_format((float) $draft['parent']['domicile_distance_km'], 2, ',', '.') }} km dari sekolah.@else Belum dihitung. Fitur ini opsional. @endisset
+                </p>
+                <div class="domicile-distance-actions">
+                    <button class="button secondary" type="button" data-distance-button>Hitung dari lokasi saya</button>
+                    <a class="text-link" href="{{ config('school.map_url') }}" target="_blank" rel="noopener">Lihat lokasi sekolah</a>
+                </div>
+            </div>
+        </div>
     </section>
 </div>
 @elseif($step===3)
-<div class="upload-intro"><span aria-hidden="true">✨</span><p>Siapkan tiga berkas ini, ya. Foto atau scan harus terbaca jelas dan ukuran masing-masing maksimal 1 MB.</p></div>
-<div class="two-grid upload-grid">@foreach(['birth_certificate'=>'Akta kelahiran','family_card'=>'Kartu Keluarga','photo'=>'Pas foto anak'] as $field=>$label)
+<div class="upload-intro"><span aria-hidden="true">✨</span><p>Siapkan empat berkas ini, ya. Foto atau scan harus terbaca jelas dan ukuran masing-masing maksimal 1 MB.</p></div>
+<div class="two-grid upload-grid">@foreach($documentFields as $field=>$document)
 <label class="registration-field upload-field">
-    <span class="field-label-row"><span>{{ $label }}</span><span class="field-badge required">Wajib</span></span>
-    <span class="upload-dropzone" data-upload><span class="upload-icon" aria-hidden="true">{{ $field==='photo' ? '🖼️' : '📄' }}</span><span class="upload-prompt">Pilih berkas <small>atau jatuhkan di sini</small></span><input type="file" name="{{ $field }}" accept="{{ $field==='photo' ? '.jpg,.jpeg,.png' : '.jpg,.jpeg,.png,.pdf' }}" @required(!isset($draft['documents'][$field]))><span class="upload-formats">{{ $field==='photo' ? 'JPG atau PNG' : 'JPG, PNG, atau PDF' }} · Maks. 1 MB</span><span class="upload-selected" data-upload-name aria-live="polite">Belum memilih berkas</span></span>
+    <span class="field-label-row"><span>{{ $document['label'] }}</span><span class="field-badge required">Wajib</span></span>
+    <span class="upload-dropzone" data-upload><span class="upload-icon" aria-hidden="true">{{ $document['icon'] }}</span><span class="upload-prompt">Pilih berkas <small>atau jatuhkan di sini</small></span><input type="file" name="{{ $field }}" accept="{{ $field==='photo' ? '.jpg,.jpeg,.png' : '.jpg,.jpeg,.png,.pdf' }}" @required(!isset($draft['documents'][$field]))><span class="upload-formats">{{ $field==='photo' ? 'JPG atau PNG' : 'JPG, PNG, atau PDF' }} · Maks. 1 MB</span><span class="upload-selected" data-upload-name aria-live="polite">Belum memilih berkas</span>
+        <span class="upload-preview" data-upload-preview hidden><span class="upload-preview-visual"><img data-upload-preview-image alt="Pratinjau berkas terpilih" hidden><span class="upload-preview-document" data-upload-preview-document aria-hidden="true">PDF</span></span><span class="upload-preview-copy"><strong data-upload-preview-status>Siap diunggah</strong><small data-upload-preview-meta></small></span></span>
+    </span>
     @if(isset($draft['documents'][$field]))<span class="upload-current"><span aria-hidden="true">✓</span> Sudah diunggah: {{ $draft['documents'][$field]['name'] }}. Pilih file baru untuk mengganti.</span>@endif
 </label>
 @endforeach</div>
 <p class="upload-reminder"><span aria-hidden="true">💡</span> Pastikan nama dan isi dokumen terlihat jelas sebelum diunggah.</p>
 @else
-@foreach(['child'=>'Data anak','parent'=>'Orang tua / wali'] as $key=>$label)<section class="review-block"><h3>{{ $label }}</h3><a href="{{ route('registration',$key==='child' ? 1 : 2) }}">Ubah</a><dl>@foreach($draft[$key] as $field=>$value)<dt>{{ __('fields.'.$field) }}</dt><dd>{{ $value ?: '—' }}</dd>@endforeach</dl></section>@endforeach
-<section class="review-block"><h3>Dokumen</h3><a href="{{ route('registration',3) }}">Ubah</a><p>3 berkas siap dikirim</p>@foreach($draft['documents'] as $file)<p>{{ $file['name'] }}</p>@endforeach</section>
+@foreach(['child'=>'Data anak','parent'=>'Orang tua / wali'] as $key=>$label)<section class="review-block"><h3>{{ $label }}</h3><a href="{{ route('registration',$key==='child' ? 1 : 2) }}">Ubah</a><dl>@foreach($draft[$key] as $field=>$value)@continue(in_array($field, ['domicile_latitude','domicile_longitude'], true))<dt>{{ __('fields.'.$field) }}</dt><dd>{{ $field==='domicile_distance_km' ? number_format((float) $value, 2, ',', '.').' km' : ($value ?: '—') }}</dd>@endforeach</dl></section>@endforeach
+<section class="review-block"><h3>Dokumen</h3><a href="{{ route('registration',3) }}">Ubah</a><p>4 berkas sudah diunggah dan siap dikirim</p>@foreach($documentFields as $field=>$document)@if(isset($draft['documents'][$field]))<p><span aria-hidden="true">✓</span> {{ $document['label'] }}: {{ $draft['documents'][$field]['name'] }}</p>@endif @endforeach</section>
 <label class="checkbox-label"><input type="checkbox" name="consent" value="1" required @checked(old('consent'))><span>Saya menyetujui <a class="text-link" href="{{ route('privacy') }}" target="_blank" rel="noopener">kebijakan privasi</a> dan pemrosesan data untuk keperluan pendaftaran sekolah.</span></label>
 @endif
-<div class="form-actions"><small><span aria-hidden="true">🔒</span> Data pribadi dijaga aman. <span class="required-note">* Kolom wajib diisi.</span></small><div class="action-buttons">@if($step>1)<a class="button secondary" href="{{ route('registration',$step-1) }}"><span aria-hidden="true">←</span> Kembali</a>@endif<button class="button" type="submit">{{ $step===4 ? 'Kirim Pendaftaran 🎉' : 'Lanjutkan →' }}</button></div></div>
+<div class="form-actions"><small><span aria-hidden="true">🔒</span> Data pribadi dijaga aman. <span class="required-note">* Kolom wajib diisi.</span></small><div class="action-buttons">@if($step>1)<a class="button liquid-glass-button" data-liquid-button href="{{ route('registration',$step-1) }}">Kembali</a>@endif<button class="button liquid-glass-button" data-liquid-button type="submit">{{ $step===4 ? 'Kirim Pendaftaran 🎉' : 'Lanjutkan' }}</button></div></div>
 </form>
     </div>
 </div>

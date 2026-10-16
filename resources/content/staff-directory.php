@@ -12,11 +12,11 @@ $profiles = [
     ['Dewi Anggraini, S.Pd.', 'Wali Kelas 5', 'guru', 'Mengembangkan kemandirian, tanggung jawab, dan keberanian menyampaikan gagasan.'],
     ['Fajar Setiawan, S.Pd.', 'Wali Kelas 6', 'guru', 'Membimbing penguatan belajar dan kesiapan memasuki jenjang sekolah berikutnya.'],
     ['Ahmad Fauzi, S.Pd.I.', 'Guru Pendidikan Agama Islam', 'guru', 'Mendampingi pemahaman agama Islam, budi pekerti, dan sikap saling menghormati.'],
-    ['Maria Simanjuntak, S.Pd.', 'Guru Pendidikan Agama Kristen', 'guru', 'Mendampingi pendidikan agama Kristen dan budi pekerti sesuai keyakinan anak.'],
+    ['Maria Simanjuntak, S.Pd.', 'Guru Pendidikan Agama Kristen', 'guru', 'Mendampingi pendidikan agama Kristen dan budi pekerti sesuai keyakinan anak.', '/assets/team/maria-simanjuntak.jpg'],
     ['Stefanus Wijaya, S.Pd.', 'Guru Pendidikan Agama Katolik', 'guru', 'Mendampingi pendidikan agama Katolik, kepedulian, dan budi pekerti anak.'],
     ['Ni Made Saraswati, S.Pd.', 'Guru Pendidikan Agama Hindu', 'guru', 'Mendampingi pendidikan agama Hindu, budi pekerti, dan keharmonisan hidup bersama.'],
     ['Budi Dharmanto, S.Pd.', 'Guru Pendidikan Agama Buddha', 'guru', 'Mendampingi pendidikan agama Buddha, welas asih, dan kebiasaan berbuat baik.'],
-    ['Lina Susanti, S.Pd.', 'Guru Pendidikan Agama Khonghucu', 'guru', 'Mendampingi pendidikan agama Khonghucu, kebajikan, dan sikap saling menghargai.'],
+    ['Lina Susanti, S.Pd.', 'Guru Pendidikan Agama Khonghucu', 'guru', 'Mendampingi pendidikan agama Khonghucu, kebajikan, dan sikap saling menghargai.', '/assets/team/lina-susanti.png'],
     ['Clara Kusuma, S.Pd.', 'Guru Bahasa Inggris', 'guru', 'Mengenalkan komunikasi sederhana melalui cerita, lagu, dan permainan.'],
     ['Bima Wicaksana, S.Pd.', 'Guru PJOK', 'guru', 'Mendampingi pendidikan jasmani, olahraga, kesehatan, sportivitas, dan gerak yang aman.'],
     ['Intan Prameswari, S.Pd.', 'Guru Seni dan Budaya', 'guru', 'Mengajak anak berekspresi melalui seni rupa, musik, tari, dan teater sesuai program kelas.'],
@@ -38,9 +38,44 @@ $portraits = [0,1,2,3,4,6,5,7,8,11,10,14,12,15,13,16,17,18,21,19,20,22,23,24,25,
 
 return [
     'people' => array_map(static fn ($row, $index) => [
-        'name'=>$row[0], 'role'=>$row[1], 'group'=>$row[2], 'description'=>$row[3],
+        'name'=>$row[0], 'role'=>$row[1], 'group'=>$row[2], 'description'=>$row[3], 'photo'=>$row[4] ?? null,
         'portrait'=>$portraits[$index],
     ], $profiles, array_keys($profiles)),
+    'structure' => [
+        'head' => 0,
+        'branches' => [
+            [
+                'title' => 'Bidang Pembelajaran',
+                'summary' => 'Kurikulum, wali kelas, mata pelajaran, dan dukungan fasilitas belajar.',
+                'tone' => 'blue',
+                'lead' => 1,
+                'teams' => [
+                    ['title' => 'Wali Kelas', 'members' => range(3, 8)],
+                    ['title' => 'Guru Bidang Studi', 'members' => range(9, 18)],
+                    ['title' => 'Dukungan Pembelajaran', 'members' => [24, 26]],
+                ],
+            ],
+            [
+                'title' => 'Bidang Pendampingan Anak',
+                'summary' => 'Kesejahteraan, kebutuhan belajar, kesehatan, dan tumbuh kembang anak.',
+                'tone' => 'green',
+                'lead' => 2,
+                'teams' => [
+                    ['title' => 'Kesejahteraan & Tumbuh Kembang', 'members' => [19, 20, 25]],
+                ],
+            ],
+            [
+                'title' => 'Bidang Layanan Sekolah',
+                'summary' => 'Administrasi, data, keuangan, keamanan, kebersihan, dan layanan kantin.',
+                'tone' => 'yellow',
+                'lead' => 21,
+                'teams' => [
+                    ['title' => 'Administrasi & Data', 'members' => [22, 23]],
+                    ['title' => 'Lingkungan Aman & Nyaman', 'members' => [27, 28, 29]],
+                ],
+            ],
+        ],
+    ],
     'subjects' => [
         ['title'=>'Bahasa Indonesia', 'by'=>'Wali kelas 1–6', 'text'=>'Membaca, menulis, berbicara, dan menyimak dengan percaya diri.'],
         ['title'=>'Matematika', 'by'=>'Wali kelas 1–6', 'text'=>'Memahami bilangan, pola, pengukuran, dan pemecahan masalah sehari-hari.'],

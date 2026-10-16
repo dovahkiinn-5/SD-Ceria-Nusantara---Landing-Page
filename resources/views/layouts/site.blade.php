@@ -9,6 +9,7 @@
     <link rel="preload" href="/assets/fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="/css/site.css">
     <link rel="stylesheet" href="/css/hero-motion.css">
+    <link rel="stylesheet" href="/css/announcement.css">
     @if(($page ?? '') === 'teachers')<link rel="stylesheet" href="/css/team-directory.css">@endif
     @if(($page ?? '') === 'registration')<link rel="stylesheet" href="/css/registration.css">@endif
     <script src="/js/site.js" defer></script>
@@ -18,11 +19,13 @@
 <header class="site-header">
     <div class="header-inner">
         <a class="brand" href="{{ route('home') }}" aria-label="SD Ceria Nusantara, beranda">
-            <img src="{{ $site['settings']['logo'] }}" alt="" width="62" height="62">
+            <span class="brand-emblem" aria-hidden="true">
+                <img src="{{ $site['settings']['logo'] }}" alt="" width="62" height="62">
+            </span>
             <span>SD CERIA<small>NUSANTARA</small></span>
         </a>
         <nav id="navigation" aria-label="Navigasi utama">
-            @foreach(['home'=>'Beranda','about'=>'Tentang Kami','program'=>'Program','facilities'=>'Fasilitas','teachers'=>'Guru & Staf','gallery'=>'Galeri','contact'=>'Kontak'] as $key=>$label)
+            @foreach(['home'=>'Beranda','about'=>'Tentang Kami','program'=>'Program','facilities'=>'Fasilitas','teachers'=>'Guru & Staf','gallery'=>'Galeri','contact'=>'Kontak','announcement'=>'Pengumuman'] as $key=>$label)
             <a href="{{ route($key) }}" @if(($page ?? '') === $key) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
         </nav>

@@ -19,7 +19,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Start-Website.ps1
 Atau gunakan PHP XAMPP yang terpasang di komputer ini:
 
 ```powershell
-& 'C:\xampp\php\php.exe' -d upload_max_filesize=1M -d post_max_size=4M -S 127.0.0.1:8000 -t public tools/serve-router.php
+& 'C:\xampp\php\php.exe' -d upload_max_filesize=1M -d post_max_size=6M -S 127.0.0.1:8000 -t public tools/serve-router.php
 ```
 
 Biarkan terminal server berjalan. Hentikan dengan Ctrl+C. Untuk port lain gunakan `.\Start-Website.ps1 -Port 8001`.
@@ -29,14 +29,16 @@ Biarkan terminal server berjalan. Hentikan dengan Ctrl+C. Untuk port lain gunaka
 - Beranda, tentang sekolah, program, fasilitas, guru/staf, galeri, dan kontak.
 - Desktop dan tablet berdasarkan PDF, serta penyesuaian ponsel.
 - Pendaftaran empat langkah: anak, orang tua, berkas, dan pemeriksaan/persetujuan.
-- Upload akta, KK, dan foto dengan validasi tipe/ukuran; dokumen hanya dapat diunduh admin yang masuk.
+- Upload akta kelahiran, Kartu Keluarga, Kartu Identitas Anak (KIA), dan pas foto dengan validasi tipe/ukuran; dokumen hanya dapat diunduh admin yang masuk.
+- Pratinjau berkas sebelum diunggah dan kalkulator jarak domisili berbasis lokasi perangkat.
+- Pengumuman hasil seleksi memakai nomor pendaftaran dan tanggal lahir; tautan grup WhatsApp hanya tersedia bagi peserta yang diterima.
 - Formulir permintaan kunjungan sekolah.
 - Admin untuk mengedit teks/gambar, meninjau pendaftar dan kunjungan, mengubah status/catatan, serta ekspor CSV.
 - Akun pemilik dan editor, perubahan kata sandi, dan penonaktifan akun. Penghapusan data dan pengelolaan akun dibatasi untuk pemilik.
 - Reset kata sandi akun admin yang sudah ada melalui perintah Artisan dengan input tersembunyi.
 - Pagination, cache konten, validasi server, CSRF, pembatasan percobaan login, dan password hash.
 
-Konfirmasi pendaftaran ditampilkan di website. Tautan WhatsApp/email membuka aplikasi terkait; pengiriman notifikasi otomatis belum dikonfigurasi.
+Konfirmasi pendaftaran dan pengumuman hasil seleksi ditampilkan di website. Tautan WhatsApp/email membuka aplikasi terkait; pengiriman notifikasi otomatis belum dikonfigurasi.
 
 ## Instalasi pada komputer lain
 
