@@ -8,6 +8,10 @@
     <link rel="icon" href="{{ $site['settings']['logo'] }}" type="image/png">
     <link rel="preload" href="/assets/fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="/css/hero-motion.css">
+    <link rel="stylesheet" href="/css/announcement.css">
+    @if(($page ?? '') === 'teachers')<link rel="stylesheet" href="/css/team-directory.css">@endif
+    @if(($page ?? '') === 'registration')<link rel="stylesheet" href="/css/registration.css">@endif
     <script src="/js/site.js" defer></script>
 </head>
 <body class="page-{{ $page ?? 'registration' }}">
@@ -15,11 +19,13 @@
 <header class="site-header">
     <div class="header-inner">
         <a class="brand" href="{{ route('home') }}" aria-label="SD Ceria Nusantara, beranda">
-            <img src="{{ $site['settings']['logo'] }}" alt="" width="62" height="62">
+            <span class="brand-emblem" aria-hidden="true">
+                <img src="{{ $site['settings']['logo'] }}" alt="" width="62" height="62">
+            </span>
             <span>SD CERIA<small>NUSANTARA</small></span>
         </a>
         <nav id="navigation" aria-label="Navigasi utama">
-            @foreach(['home'=>'Beranda','about'=>'Tentang Kami','program'=>'Program','facilities'=>'Fasilitas','teachers'=>'Guru & Staf','gallery'=>'Galeri','contact'=>'Kontak'] as $key=>$label)
+            @foreach(['home'=>'Beranda','about'=>'Tentang Kami','program'=>'Program','facilities'=>'Fasilitas','teachers'=>'Guru & Staf','gallery'=>'Galeri','contact'=>'Kontak','announcement'=>'Pengumuman'] as $key=>$label)
             <a href="{{ route($key) }}" @if(($page ?? '') === $key) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
         </nav>
@@ -44,6 +50,10 @@
     <div class="footer-contact"><p><a href="mailto:{{ $site['settings']['email'] }}">{{ $site['settings']['email'] }}</a> • <a href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener">WA {{ $site['settings']['whatsapp'] }}</a></p><p>{{ $site['settings']['address'] }}</p><p>{{ $site['settings']['hours'] }}</p></div>
     @if(($page ?? '') === 'home')<div class="footer-bottom"><span>© {{ date('Y') }} SD Ceria Nusantara. Hak cipta dilindungi.</span><span><a href="{{ route('privacy') }}">Privasi</a> • <a href="{{ route('terms') }}">Syarat & Ketentuan</a></span></div>@endif
 </div></footer>
+<a class="whatsapp-float" data-whatsapp-float href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener" aria-label="Tanya via WhatsApp" title="Tanya via WhatsApp">
+    <img src="/assets/design/whatsapp.svg" alt="" width="38" height="38">
+    <span>Tanya via WhatsApp</span>
+</a>
 <dialog id="image-dialog" class="image-dialog"><button class="dialog-close" type="button" aria-label="Tutup gambar">×</button><img alt=""><p></p></dialog>
 @stack('scripts')
 </body></html>

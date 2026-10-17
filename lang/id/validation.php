@@ -6,11 +6,15 @@ return [
     'max'=>['string'=>':attribute maksimal :max karakter.','file'=>':attribute maksimal :max KB.','array'=>':attribute terlalu banyak.'],
     'min'=>['string'=>':attribute minimal :min karakter.'], 'accepted'=>'Persetujuan :attribute wajib diberikan.',
     'mimes'=>'Format :attribute harus :values.', 'file'=>':attribute harus berupa berkas.', 'uploaded'=>':attribute gagal diunggah. Periksa ukuran berkas.',
-    'regex'=>'Format :attribute tidak valid.', 'confirmed'=>'Konfirmasi :attribute tidak sama.', 'array'=>':attribute tidak valid.',
+    'regex'=>'Format :attribute tidak valid.', 'numeric'=>':attribute harus berupa angka.',
+    'between'=>['numeric'=>':attribute harus bernilai antara :min dan :max.'],
+    'required_with'=>':attribute wajib diisi saat :values tersedia.',
+    'confirmed'=>'Konfirmasi :attribute tidak sama.', 'array'=>':attribute tidak valid.',
     'attributes'=>[
         'child_name'=>'nama lengkap anak','nickname'=>'nama panggilan','birth_date'=>'tanggal lahir','gender'=>'jenis kelamin',
         'parent_name'=>'nama orang tua / wali','relationship'=>'hubungan dengan anak','phone'=>'nomor WhatsApp','email'=>'email',
-        'birth_certificate'=>'akta kelahiran','family_card'=>'Kartu Keluarga','photo'=>'pas foto','consent'=>'kebijakan privasi',
+        'birth_certificate'=>'akta kelahiran','family_card'=>'Kartu Keluarga','child_identity_card'=>'Kartu Identitas Anak (KIA)','photo'=>'pas foto','consent'=>'kebijakan privasi',
+        'domicile_latitude'=>'lintang domisili','domicile_longitude'=>'bujur domisili',
         'name'=>'nama','date'=>'tanggal kunjungan','password'=>'kata sandi',
     ],
 ];

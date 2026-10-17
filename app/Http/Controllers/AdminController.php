@@ -81,7 +81,7 @@ class AdminController extends Controller
     }
     public function document(DocumentStore $store, FirestoreFileStorage $storage, string $id, string $field)
     {
-        abort_unless(in_array($field,['birth_certificate','family_card','photo']),404);
+        abort_unless(in_array($field,['birth_certificate','family_card','child_identity_card','photo']),404);
         $record = $store->get('applications',$id);
         $file = $record['documents'][$field] ?? null;
         $download = $file ? $storage->get($file['path']) : null;
@@ -101,12 +101,17 @@ class AdminController extends Controller
         return response()->streamDownload(function () use ($store) {
             $stream = fopen('php://output', 'w');
             fwrite($stream,"\xEF\xBB\xBF");
-            fputcsv($stream,['Nomor','Nama anak','Tanggal lahir','Nama orang tua','WhatsApp','Email','Status','Tanggal daftar'],',','"','');
+            fputcsv($stream,['Nomor','Nama anak','Tanggal lahir','Nama orang tua','WhatsApp','Email','Alamat domisili','Jarak ke sekolah (km)','Status','Tanggal daftar'],',','"','');
             $cursor = null;
             do {
                 $page = $store->page('applications',$cursor,100);
                 foreach ($page['items'] as $row) {
-                    $cells = [$row['reference'],$row['child']['child_name'],$row['child']['birth_date'],$row['parent']['parent_name'],$row['parent']['phone'],$row['parent']['email'],$row['status'],$row['created_at']];
+                    $cells = [
+                        $row['reference'], $row['child']['child_name'], $row['child']['birth_date'],
+                        $row['parent']['parent_name'], $row['parent']['phone'], $row['parent']['email'],
+                        $row['parent']['address'] ?? '', $row['parent']['domicile_distance_km'] ?? '',
+                        $row['status'], $row['created_at'],
+                    ];
                     $cells = array_map(fn ($value) => preg_match('/^[\s]*[=+@\-\t\r]/u',(string)$value) ? "'".$value : $value,$cells);
                     fputcsv($stream,$cells,',','"','');
                 }
@@ -145,6 +150,9 @@ class AdminController extends Controller
             }
             if ($key === 'email') Validator::make(['email'=>$new],['email'=>'required|email'])->validate();
             if ($key === 'whatsapp') Validator::make(['phone'=>$new],['phone'=>['required','regex:/^\+?[0-9 ()-]{9,25}$/']])->validate();
+            if ($key === 'map_url' && ! preg_match('#^https://(?:www\.)?google\.com/maps/#i', (string) $new)) {
+                throw ValidationException::withMessages(['values'=>'Tautan peta harus menggunakan alamat Google Maps yang aman.']);
+            }
             Arr::set($data,$key,$new ?? '');
         }
         $content->save($section,$data);

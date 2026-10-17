@@ -54,5 +54,13 @@ class AppServiceProvider extends ServiceProvider
         ]);
         RateLimiter::for('submissions', fn (Request $request) => Limit::perMinute(12)->by($request->ip()));
         RateLimiter::for('visits', fn (Request $request) => Limit::perHour(5)->by($request->ip()));
+        RateLimiter::for('announcements', function (Request $request) {
+            $reference = mb_strtoupper(trim((string) $request->input('reference')));
+
+            return [
+                Limit::perMinute(5)->by('announcement-reference:'.hash('sha256', $reference)),
+                Limit::perMinute(15)->by('announcement-ip:'.$request->ip()),
+            ];
+        });
     }
 }

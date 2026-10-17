@@ -32,7 +32,7 @@ with sync_playwright() as p:
     page.locator('[name=address]').fill('Alamat pengujian otomatis')
     page.get_by_role('button',name='Lanjutkan',exact=True).click()
     expect(page).to_have_url(re.compile('/pendaftaran/3$'))
-    for field in ['birth_certificate','family_card']:
+    for field in ['birth_certificate','family_card','child_identity_card']:
         page.locator(f'[name={field}]').set_input_files(str(fixture))
     page.locator('[name=photo]').set_input_files(str(root/'public/assets/design/asset-02.png'))
     page.get_by_role('button',name='Lanjutkan',exact=True).click()
@@ -43,7 +43,7 @@ with sync_playwright() as p:
     page.get_by_role('button',name='Kirim Formulir',exact=True).click()
     expect(page).to_have_url(re.compile('/pendaftaran/berhasil$'))
     reference=page.locator('.registration-number strong').inner_text()
-    checks.append('Four-step registration with real PDF/PNG uploads and consent passed')
+    checks.append('Four-step registration with four real PDF/PNG uploads and consent passed')
     page.screenshot(path=str(out/'registration-success.png'),full_page=True)
     guest=browser.new_context()
     response=guest.request.get('http://127.0.0.1:8000/admin/berkas/'+reference+'/photo',max_redirects=0)
@@ -59,7 +59,7 @@ with sync_playwright() as p:
     page.goto('http://127.0.0.1:8000/admin/data/applications/'+reference)
     expect(page.locator('.detail-list').first).to_contain_text(marker)
     with page.expect_download() as download:
-        page.get_by_role('link',name='↓ Akta kelahiran').click()
+        page.locator('a[href$="/child_identity_card"]').click()
     assert download.value.suggested_filename=='test-document.pdf'
     page.locator('[name=status]').select_option('diterima')
     page.locator('[name=admin_notes]').fill('Pengujian otomatis; data akan dihapus.')

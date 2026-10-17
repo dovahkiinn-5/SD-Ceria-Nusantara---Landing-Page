@@ -3,8 +3,9 @@
 // Transcribed from the supplied desktop and tablet PDFs. Initial content is design/sample data.
 return [
     'settings' => [
-        'school_name' => 'SD Ceria Nusantara', 'email' => 'sdcerianusantara@dumy.com',
-        'whatsapp' => '+6281234567890', 'address' => 'Jl. Pelangi Imajiner No. 12, Kel. Awan Ceria, Kota Imajinaria',
+        'school_name' => 'SD CERIA NUSANTARA', 'email' => 'sdcerianusantara@dumy.com',
+        'whatsapp' => '+628317522313', 'address' => config('school.address'),
+        'map_url' => config('school.map_url'),
         'hours' => 'Senin–Jumat • 07.00–15.00 WIB', 'tagline' => 'Belajar ceria, tumbuh bersama.',
         'students' => '360+', 'teachers' => '28', 'founded' => '2014', 'accreditation' => 'A',
         'period' => 'Oktober 2026–Mei 2027', 'age' => '6–7 tahun pada Juli 2027', 'fee' => 'Rp250.000',
@@ -33,7 +34,7 @@ return [
             'admission'=>[
                 ['title'=>'1. Data anak','text'=>'Isi identitas dan asal sekolah anak.','icon'=>'book'],
                 ['title'=>'2. Data orang tua','text'=>'Lengkapi kontak orang tua atau wali.','icon'=>'users'],
-                ['title'=>'3. Unggah berkas','text'=>'Siapkan akta, KK, dan pas foto.','icon'=>'mail'],
+                ['title'=>'3. Unggah berkas','text'=>'Siapkan akta, KK, KIA, dan pas foto.','icon'=>'mail'],
                 ['title'=>'4. Periksa & kirim','text'=>'Simpan nomor pendaftaran Anda.','icon'=>'shield'],
             ],
         ],
@@ -65,7 +66,7 @@ return [
         ],
         'faq'=>[
             ['question'=>'Kapan pendaftaran siswa baru dibuka?','answer'=>'Periode pendaftaran Oktober 2026–Mei 2027. Hubungi panitia untuk memastikan ketersediaan tempat.'],
-            ['question'=>'Dokumen apa saja yang perlu disiapkan?','answer'=>'Siapkan akta kelahiran, Kartu Keluarga, dan pas foto anak. Akta dan KK dapat berupa JPG, PNG, atau PDF; pas foto berupa JPG atau PNG, maksimal 1 MB per berkas.'],
+            ['question'=>'Dokumen apa saja yang perlu disiapkan?','answer'=>'Siapkan akta kelahiran, Kartu Keluarga, Kartu Identitas Anak (KIA), dan pas foto anak. Akta, KK, dan KIA dapat berupa JPG, PNG, atau PDF; pas foto berupa JPG atau PNG, maksimal 1 MB per berkas.'],
             ['question'=>'Berapa biaya pendaftaran dan pendidikan?','answer'=>'Biaya pendaftaran dalam informasi sekolah adalah Rp250.000. Hubungi panitia untuk rincian biaya pendidikan terbaru.'],
             ['question'=>'Bisakah orang tua mengunjungi sekolah?','answer'=>'Bisa. Ajukan jadwal kunjungan melalui halaman Kontak. Tim sekolah akan menghubungi Anda untuk konfirmasi.'],
             ['question'=>'Berapa usia minimum calon siswa?','answer'=>'Usia masuk dalam informasi sekolah adalah 6–7 tahun pada Juli 2027. Konfirmasikan kebutuhan anak kepada panitia.'],

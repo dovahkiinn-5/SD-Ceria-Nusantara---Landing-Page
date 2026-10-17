@@ -13,6 +13,8 @@ Foto sekolah, logo, mosaik fasilitas, dan foto guru diekstrak dari PDF ke `publi
 
 Implementasi memakai Blade, `public/css/site.css`, dan `public/js/site.js`. Layout desktop berlaku di atas 1000 px; tablet sampai 1000 px; penyesuaian ponsel sampai 600 px. Konten tablet mengikuti variasi yang terdapat pada PDF, termasuk susunan kartu dan bagian beranda yang berbeda. Ponsel menyesuaikan susunan tablet agar teks dan formulir tetap terbaca.
 
+Halaman publik memakai reveal ringan saat elemen masuk viewport, efek hover untuk kartu dan tombol pada perangkat yang mendukung hover, serta gerak morph dekorasi hero beranda yang lambat. Hero beranda memiliki slideshow otomatis gambar kawasan sekolah yang diberikan pengguna serta foto kelas dan kegiatan; slideshow berputar setiap 5,5 detik dan berhenti saat tab browser tidak aktif. Autoplay dan gerak dekoratif nonaktif pada pengaturan reduced motion. Fasilitas memakai enam tile dari kolase yang tersedia; masing-masing dapat diperbesar dan diberi efek zoom. Tombol WhatsApp mengambang berada di pojok bawah: pada desktop ia muncul saat pointer mendekati pojok tersebut dan melebar saat di-hover; pada perangkat sentuh ia tetap terlihat. Animasi scroll hanya aktif jika JavaScript dan `IntersectionObserver` tersedia; tanpa dukungan tersebut konten tetap terlihat. Semua gerak dekoratif dan transisi dihormati/nonaktif pada pengaturan `prefers-reduced-motion`.
+
 Panel admin memakai warna dan tipografi sekolah. Desain admin tidak tersedia dalam PDF. Data awal seperti nama, alamat, statistik, biaya, dan periode mengikuti desain; pengelola dapat menyesuaikannya melalui admin sebelum dipakai sekolah.
 
 ## Pemeriksaan

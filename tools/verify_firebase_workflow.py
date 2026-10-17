@@ -128,7 +128,7 @@ with sync_playwright() as playwright:
         page.locator('[name=address]').fill('Alamat pengujian otomatis Firebase')
         page.get_by_role('button', name='Lanjutkan', exact=True).click()
         expect(page).to_have_url(BASE + '/pendaftaran/3')
-        for field in ['birth_certificate', 'family_card']:
+        for field in ['birth_certificate', 'family_card', 'child_identity_card']:
             page.locator('[name=' + field + ']').set_input_files(str(fixture))
         page.locator('[name=photo]').set_input_files(str(ROOT / 'public/assets/design/asset-02.png'))
         page.get_by_role('button', name='Lanjutkan', exact=True).click()
@@ -140,8 +140,8 @@ with sync_playwright() as playwright:
         reference = page.locator('.registration-number strong').inner_text().strip()
         REPORT['registrationReference'] = reference
         saved = read_cloud('record', collection='applications', id=reference, marker=MARKER)
-        assert saved == {'exists': True, 'markerMatches': True, 'status': 'baru', 'documentCount': 3, 'hasConsent': True}
-        REPORT['checks'].append('The four-step registration created a Firestore application with consent and three private file references')
+        assert saved == {'exists': True, 'markerMatches': True, 'status': 'baru', 'documentCount': 4, 'hasConsent': True}
+        REPORT['checks'].append('The four-step registration created a Firestore application with consent and four private file references')
 
         guest = browser.new_context()
         response = guest.request.get(BASE + '/admin/berkas/' + reference + '/photo', max_redirects=0)
@@ -152,7 +152,7 @@ with sync_playwright() as playwright:
         page.goto(BASE + '/admin/data/applications/' + reference)
         expect(page.locator('.detail-list').first).to_contain_text(MARKER)
         with page.expect_download() as download:
-            page.locator('a[href$="/birth_certificate"]').click()
+            page.locator('a[href$="/child_identity_card"]').click()
         assert download.value.suggested_filename == fixture.name
         page.locator('[name=status]').select_option('diterima')
         page.locator('[name=admin_notes]').fill(MARKER + '; data uji akan dihapus.')
