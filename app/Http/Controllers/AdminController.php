@@ -125,6 +125,9 @@ class AdminController extends Controller
         $all = $content->all();
         abort_unless(isset($all[$section]),404);
         $fields = Arr::dot($all[$section]);
+        if ($section === 'teachers') {
+            $fields = Arr::dot(Arr::except($all[$section], ['team']));
+        }
         return view('admin.content',compact('all','section','fields'));
     }
     public function updateContent(Request $request, SchoolContent $content, FirestoreFileStorage $storage, string $section)
@@ -132,13 +135,16 @@ class AdminController extends Controller
         $all = $content->all();
         abort_unless(isset($all[$section]),404);
         $fields = Arr::dot($all[$section]);
+        if ($section === 'teachers') {
+            $fields = Arr::dot(Arr::except($all[$section], ['team']));
+        }
         $request->validate(['values'=>'required|array','uploads.*'=>'nullable|file|mimes:jpg,jpeg,png,webp|max:1024']);
         $data = [];
         foreach ($fields as $key => $value) {
             $new = $request->input('values')[$key] ?? $value;
             Validator::make(['value'=>$new],['value'=>'nullable|string|max:10000'])->validate();
             if (preg_match('/(^image$|_image$|^logo$|\.photo$)/',$key)) {
-                if (! preg_match('#^/(?:assets/design|media)/[a-zA-Z0-9_.-]+\.(png|jpe?g|webp)$#',(string)$new)) {
+                if (! ($new === '' && str_ends_with($key, '.photo')) && ! preg_match('#^/(?:assets/design|assets/team|media)/[a-zA-Z0-9_.-]+\.(png|jpe?g|webp)$#',(string)$new)) {
                     throw ValidationException::withMessages(['values'=>'Gunakan gambar lokal yang diunggah atau aset desain yang tersedia.']);
                 }
                 $index = array_search($key,array_keys($fields));

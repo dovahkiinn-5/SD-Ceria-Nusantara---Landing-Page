@@ -3,13 +3,13 @@
 @section('content')
 @php
     $directory = require resource_path('content/staff-directory.php');
-    $people = $directory['people'];
+    $people = $site['teachers']['directory'];
     $structure = $directory['structure'];
     $groupCounts = array_count_values(array_column($people, 'group'));
 @endphp
 <section class="people-hero outer">
     <div><p class="eyebrow">KENALI KELUARGA SEKOLAH KAMI</p><h1>Wajah ramah,<br>teman tumbuh anak.</h1><p>Di kelas, di perpustakaan, hingga di gerbang sekolah—ada tim yang siap mendampingi langkah kecil buah hati Anda.</p><div class="people-hero-actions"><a class="button" href="#direktori">Berkenalan dengan tim ↗</a><a class="text-link" href="#struktur">Lihat struktur sekolah ↓</a></div><div class="people-facts"><span><strong>6</strong> jenjang kelas</span><span><strong>{{ count($people) }}</strong> profil contoh</span><span><strong>1</strong> semangat mendampingi</span></div></div>
-    <div class="people-hero-photo"><x-staff-portrait :index="$people[0]['portrait']" :name="$people[0]['name']"/><div class="people-photo-note"><span aria-hidden="true">♡</span><div><strong>Setiap anak dikenal,</strong><br>setiap keluarga didengar.</div></div><span class="people-photo-badge">Bertumbuh bersama</span></div>
+    <div class="people-hero-photo"><x-staff-portrait :index="$people[0]['portrait']" :name="$people[0]['name']" :photo="$people[0]['photo']"/><div class="people-photo-note"><span aria-hidden="true">♡</span><div><strong>Setiap anak dikenal,</strong><br>setiap keluarga didengar.</div></div><span class="people-photo-badge">Bertumbuh bersama</span></div>
 </section>
 <div class="container people-demo-note"><span aria-hidden="true">ⓘ</span><p><strong>Contoh profil sekolah.</strong> Seluruh nama, foto, jabatan, dan pembagian tugas di halaman ini adalah data dummy. Susunan guru, layanan, dan mata pelajaran sebenarnya perlu dikonfirmasi kepada sekolah.</p></div>
 <section class="section people-values"><div class="container"><x-heading eyebrow="LEBIH DARI MENGAJAR" title="Mendampingi dengan hati" subtitle="Kami ingin anak merasa aman, orang tua merasa tenang, dan komunikasi selalu terbuka."/><x-cards :items="$site['teachers']['values']"/></div></section>

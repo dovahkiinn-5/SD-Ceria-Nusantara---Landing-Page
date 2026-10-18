@@ -13,7 +13,7 @@ Semua koleksi berikut berada langsung di root Cloud Firestore; objek bersarang t
 | `content/about` | Hero, cerita sekolah, visi, misi, nilai, kutipan |
 | `content/program` | Hero, pendekatan, kurikulum, aktivitas |
 | `content/facilities` | Hero, daftar ruangan dan fitur fasilitas |
-| `content/teachers` | Hero, nilai pendampingan, daftar tim awal |
+| `content/teachers` | Hero, nilai pendampingan, dan profil guru/staf di field `directory` |
 | `content/gallery` | Hero dan daftar berita |
 | `content/contact` | Hero dan jam kunjungan |
 | `admins/{sha256(email)}` | Akun pengelola |
@@ -31,7 +31,9 @@ Field dan nilai lengkap setiap dokumen `content` tersedia di [snapshot konten](D
 
 `SchoolContent::all()` membaca default lalu menggabungkan dokumen tersimpan dengan `array_replace_recursive`. Field `id` hasil pembacaan dibuang sebelum penggabungan. Cache hasil bertahan 300 detik dan dibersihkan ketika admin menyimpan konten. `school:seed-content` membuat dokumen yang belum ada tanpa menimpa ID yang sudah ada.
 
-Direktori staf tambahan berada di [staff-directory.php](../resources/content/staff-directory.php); file ini bukan koleksi Firestore tersendiri. Gambar bawaan `/assets/...` adalah aset publik proyek; path unggahan merujuk penyimpanan berkas di bawah.
+Profil guru/staf aktif dibaca dari array `directory` pada dokumen `content/teachers`. Profil kepala sekolah berada di `directory[0]`, dengan field `name`, `role`, `description`, dan `photo`. Admin, beranda, direktori, struktur sekolah, dan halaman tentang memakai profil yang sama. Dokumen ini dibaca ulang pada setiap permintaan halaman, sehingga perubahan langsung melalui konsol Firebase terlihat setelah halaman dimuat ulang. Field `team` dipertahankan untuk kompatibilitas; ubah profil melalui `directory` atau editor admin.
+
+[staff-directory.php](../resources/content/staff-directory.php) menyediakan nilai awal serta susunan struktur sekolah. Gambar bawaan `/assets/...` adalah aset publik proyek; path unggahan merujuk penyimpanan berkas di bawah.
 
 ## admins
 
