@@ -37,11 +37,29 @@ class TeacherDirectory
         }
         unset($branch);
         $subjects = $source['subjects'];
-        foreach ([5 => 'guru-pjok', 6 => 'guru-seni-budaya', 7 => 'guru-bahasa-inggris', 8 => 'guru-muatan-lokal'] as $index => $id) {
-            $subjects[$index]['members'] = [$id];
+        $subjectMembers = [
+            0 => array_map(fn ($grade) => 'wali-kelas-'.$grade, range(1, 6)),
+            1 => array_map(fn ($grade) => 'wali-kelas-'.$grade, range(1, 6)),
+            2 => array_map(fn ($grade) => 'wali-kelas-'.$grade, range(1, 6)),
+            3 => array_map(fn ($grade) => 'wali-kelas-'.$grade, range(1, 6)),
+            4 => ['guru-agama-islam', 'guru-agama-kristen', 'guru-agama-katolik', 'guru-agama-hindu', 'guru-agama-buddha', 'guru-agama-khonghucu'],
+            5 => ['guru-pjok'],
+            6 => ['guru-seni-budaya'],
+            7 => ['guru-bahasa-inggris'],
+            8 => ['guru-muatan-lokal'],
+        ];
+        foreach ($subjectMembers as $index => $members) {
+            $subjects[$index]['members'] = $members;
             unset($subjects[$index]['by']);
         }
-        return ['schema_version' => 2, 'directory' => $directory, 'structure' => $structure, 'subjects' => $subjects];
+        $featuredPeople = array_map(fn ($index) => self::IDS[$index], [0, 1, 2, 3, 16, 21]);
+        return [
+            'schema_version' => 2,
+            'directory' => $directory,
+            'featured_people' => $featuredPeople,
+            'structure' => $structure,
+            'subjects' => $subjects,
+        ];
     }
 
     /** Convert legacy numeric profiles once, preserving names/photos but restoring school positions. */
@@ -52,10 +70,8 @@ class TeacherDirectory
             $legacyDefaults = (require resource_path('content/site.php'))['teachers']['team'];
             $directory = $defaults['directory'];
             foreach (self::IDS as $index => $id) {
-                $saved = $data['directory'][$index] ?? $data['directory'][$id] ?? [];
-                foreach (['name', 'photo', 'description'] as $field) {
-                    if (isset($saved[$field])) $directory[$id][$field] = $saved[$field];
-                }
+                $saved = $data['people'][$index] ?? $data['directory'][$index] ?? $data['directory'][$id] ?? [];
+                if (is_array($saved)) $directory[$id] = array_replace($directory[$id], $saved);
             }
             foreach (self::LEGACY_TEAM as $old => $index) {
                 $id = self::IDS[$index];
@@ -67,15 +83,69 @@ class TeacherDirectory
                     }
                 }
             }
-            $data = array_replace($data, $defaults, ['directory' => $directory]);
+            $structure = $this->mergeDefaults($defaults['structure'], $data['structure'] ?? []);
+            $structure['head'] = $this->profileId($structure['head'] ?? $defaults['structure']['head']);
+            foreach ($structure['branches'] as &$branch) {
+                if (isset($branch['lead'])) $branch['lead'] = $this->profileId($branch['lead']);
+                foreach ($branch['teams'] as &$team) {
+                    $team['members'] = array_map($this->profileId(...), $team['members'] ?? []);
+                }
+                unset($team);
+            }
+            unset($branch);
+            $featuredPeople = array_map($this->profileId(...), $data['featured_people'] ?? $defaults['featured_people']);
+            $data = array_replace($defaults, $data, [
+                'schema_version' => 2,
+                'directory' => $directory,
+                'featured_people' => $featuredPeople,
+                'structure' => $structure,
+            ]);
         }
-        unset($data['team'], $data['id']);
+        $data = $this->mergeDefaults($defaults, $data);
+        foreach ($data['subjects'] as &$subject) {
+            unset($subject['by']);
+        }
+        unset($subject);
+        unset($data['team'], $data['people'], $data['id']);
         $this->validate($data);
         // Both the editor and public directory follow the organization chart order.
         $ordered = [];
         foreach ($this->positions($data['structure']) as $id) $ordered[$id] = $data['directory'][$id];
         $data['directory'] = $ordered;
         return $data;
+    }
+
+    private function mergeDefaults(array $defaults, array $saved): array
+    {
+        if (array_is_list($defaults)) {
+            $merged = [];
+            foreach ($saved as $index => $value) {
+                $merged[$index] = isset($defaults[$index]) && is_array($defaults[$index]) && is_array($value)
+                    ? $this->mergeDefaults($defaults[$index], $value)
+                    : $value;
+            }
+            return $merged;
+        }
+
+        $merged = $defaults;
+        foreach ($saved as $key => $value) {
+            if (! array_key_exists($key, $defaults)) {
+                $merged[$key] = $value;
+            } elseif (is_array($defaults[$key]) && is_array($value)) {
+                $merged[$key] = $this->mergeDefaults($defaults[$key], $value);
+            } else {
+                $merged[$key] = $value;
+            }
+        }
+        return $merged;
+    }
+
+    private function profileId(mixed $value): mixed
+    {
+        if (is_int($value) || (is_string($value) && ctype_digit($value))) {
+            return self::IDS[(int) $value] ?? $value;
+        }
+        return $value;
     }
 
     public function positions(array $structure): array
@@ -113,6 +183,9 @@ class TeacherDirectory
             if (array_diff($subject['members'] ?? [], array_keys($directory))) {
                 throw ValidationException::withMessages(['values' => 'Pengajar mata pelajaran tidak ditemukan dalam struktur sekolah.']);
             }
+        }
+        if (array_diff($data['featured_people'] ?? [], array_keys($directory))) {
+            throw ValidationException::withMessages(['values' => 'Profil unggulan tidak ditemukan dalam direktori guru dan staf.']);
         }
     }
 }

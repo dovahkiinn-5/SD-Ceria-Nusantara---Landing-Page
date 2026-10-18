@@ -50,7 +50,8 @@ class SchoolContent
         $fields = \Illuminate\Support\Arr::dot($data);
         if ($section !== 'teachers') return $fields;
         return array_filter($fields, static fn ($key) =>
-            !str_starts_with($key, 'structure.') && $key !== 'schema_version'
+            !str_starts_with($key, 'structure.') && $key !== 'schema_version' && $key !== 'demo_profiles'
+            && !str_starts_with($key, 'featured_people.')
             && !preg_match('/\.(role|group|portrait)$|\.members\./', $key), ARRAY_FILTER_USE_KEY);
     }
 }

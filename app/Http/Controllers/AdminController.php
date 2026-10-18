@@ -124,22 +124,16 @@ class AdminController extends Controller
     {
         $all = $content->all();
         abort_unless(isset($all[$section]),404);
-        $fields = Arr::dot($all[$section]);
-        if ($section === 'teachers') {
-            $fields = Arr::dot(Arr::except($all[$section], ['team']));
-        }
+        $fields = $content->editableFields($section, $all[$section]);
         return view('admin.content',compact('all','section','fields'));
     }
     public function updateContent(Request $request, SchoolContent $content, FirestoreFileStorage $storage, string $section)
     {
         $all = $content->all();
         abort_unless(isset($all[$section]),404);
-        $fields = Arr::dot($all[$section]);
-        if ($section === 'teachers') {
-            $fields = Arr::dot(Arr::except($all[$section], ['team']));
-        }
+        $fields = $content->editableFields($section, $all[$section]);
         $request->validate(['values'=>'required|array','uploads.*'=>'nullable|file|mimes:jpg,jpeg,png,webp|max:1024']);
-        $data = [];
+        $data = $all[$section];
         foreach ($fields as $key => $value) {
             $new = $request->input('values')[$key] ?? $value;
             Validator::make(['value'=>$new],['value'=>'nullable|string|max:10000'])->validate();
