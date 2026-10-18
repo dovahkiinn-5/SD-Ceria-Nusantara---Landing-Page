@@ -158,7 +158,45 @@
 @else
 @foreach(['child'=>'Data anak','parent'=>'Orang tua / wali'] as $key=>$label)<section class="review-block"><h3>{{ $label }}</h3><a href="{{ route('registration',$key==='child' ? 1 : 2) }}">Ubah</a><dl>@foreach($draft[$key] as $field=>$value)@continue(in_array($field, ['domicile_latitude','domicile_longitude'], true))<dt>{{ __('fields.'.$field) }}</dt><dd>{{ $field==='domicile_distance_km' ? number_format((float) $value, 2, ',', '.').' km' : ($value ?: '—') }}</dd>@endforeach</dl></section>@endforeach
 <section class="review-block"><h3>Dokumen</h3><a href="{{ route('registration',3) }}">Ubah</a><p>4 berkas sudah diunggah dan siap dikirim</p>@foreach($documentFields as $field=>$document)@if(isset($draft['documents'][$field]))<p><span aria-hidden="true">✓</span> {{ $document['label'] }}: {{ $draft['documents'][$field]['name'] }}</p>@endif @endforeach</section>
+<section class="review-block payment-choice" data-payment-choice>
+    <h3>Pembayaran pendaftaran</h3>
+    <p>Biaya pendaftaran <strong>Rp250.000</strong>. Pilih cara pembayaran yang akan digunakan.</p>
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="offline" required @checked(old('payment_method', $draft['payment']['method'] ?? '') === 'offline')>
+        <span><strong>Bayar langsung di sekolah</strong><small>Pembayaran dilakukan kepada petugas sekolah.</small></span>
+    </label>
+    <label class="payment-option">
+        <input type="radio" name="payment_method" value="transfer" required @checked(old('payment_method', $draft['payment']['method'] ?? '') === 'transfer')>
+        <span><strong>Transfer bank BCA</strong><small>Rekening 8535459831 · a.n. Muhamad Azmer Fahrezi</small></span>
+    </label>
+    <div class="payment-proof-panel" data-payment-proof-panel @if(old('payment_method', $draft['payment']['method'] ?? '') !== 'transfer') hidden @endif>
+        <p>Transfer tepat <strong>Rp250.000</strong>, lalu unggah foto atau tangkapan layar bukti pembayaran (JPG, PNG, atau WEBP; maks. 1 MB).</p>
+        @if(!empty($draft['payment']['proof']['name']))<p class="upload-current">Bukti tersimpan: {{ $draft['payment']['proof']['name'] }}. Pilih file baru jika ingin mengganti.</p>@endif
+        <label class="registration-field"><span class="field-label-row"><span>Bukti pembayaran transfer <b>*</b></span></span>
+            <input type="file" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" @required(old('payment_method', $draft['payment']['method'] ?? '') === 'transfer' && empty($draft['payment']['proof']['path']))>
+        </label>
+        @error('payment_proof')<p class="field-error">{{ $message }}</p>@enderror
+    </div>
+    @error('payment_method')<p class="field-error">{{ $message }}</p>@enderror
+</section>
 <label class="checkbox-label"><input type="checkbox" name="consent" value="1" required @checked(old('consent'))><span>Saya menyetujui <a class="text-link" href="{{ route('privacy') }}" target="_blank" rel="noopener">kebijakan privasi</a> dan pemrosesan data untuk keperluan pendaftaran sekolah.</span></label>
+<script>
+    (() => {
+        const section = document.querySelector('[data-payment-choice]');
+        if (!section) return;
+        const radios = section.querySelectorAll('input[name="payment_method"]');
+        const panel = section.querySelector('[data-payment-proof-panel]');
+        const proof = section.querySelector('input[name="payment_proof"]');
+        const hasSavedProof = @json(!empty($draft['payment']['proof']['path']));
+        const update = () => {
+            const transfer = section.querySelector('input[name="payment_method"]:checked')?.value === 'transfer';
+            panel.hidden = !transfer;
+            proof.required = transfer && !hasSavedProof;
+        };
+        radios.forEach(radio => radio.addEventListener('change', update));
+        update();
+    })();
+</script>
 @endif
 <div class="form-actions"><small><span aria-hidden="true">🔒</span> Data pribadi dijaga aman. <span class="required-note">* Kolom wajib diisi.</span></small><div class="action-buttons">@if($step>1)<a class="button liquid-glass-button" data-liquid-button href="{{ route('registration',$step-1) }}">Kembali</a>@endif<button class="button liquid-glass-button" data-liquid-button type="submit">{{ $step===4 ? 'Kirim Pendaftaran 🎉' : 'Lanjutkan' }}</button></div></div>
 </form>

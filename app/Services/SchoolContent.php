@@ -21,45 +21,84 @@ class SchoolContent
 
     public function all(): array
     {
-        $content = Cache::store('file')->remember('school-content-'.config('school.store'), 300, function () {
-            $content = $this->defaults();
-            $firestoreAvailable = true;
-            foreach ($content as $key => $default) {
-                if ($key === 'teachers') continue;
-                if (! $firestoreAvailable) break;
-                try {
-                    $saved = $this->store->get('content', $key);
-                } catch (\Throwable $exception) {
-                    $firestoreAvailable = false;
-                    Log::warning('Konten Firestore tidak dapat dibaca; memakai konten lokal sementara.', [
-                        'section' => $key, 'exception' => $exception::class,
-                    ]);
-                    $saved = null;
-                }
-                if ($saved) {
-                    unset($saved['id']);
-                    $content[$key] = self::mergeDefaults($default, $saved);
-                }
-            }
-            return $content;
-        });
+        $cache = Cache::store('file');
+        $key = 'school-content-'.config('school.store');
+        $legacy = $cache->get($key);
+        if (! is_array($legacy)) $legacy = $cache->get('school-content-last-known');
 
-        // Read staff directly every request so Firebase Console edits show immediately.
-        // Keep a local last-known copy for temporary credential/network outages.
+        // The former cache used this key for five minutes. Clear it once after
+        // the freshness change, keeping its value as a fallback during outages.
+        if ($cache->get('school-content-cache-version') !== 2) {
+            if (is_array($legacy)) $cache->put('school-content-last-known', $legacy, now()->addDays(30));
+            $cache->forget($key);
+            $cache->forever('school-content-cache-version', 2);
+        }
+
+        // A short, synchronous cache is predictable on both PHP-FPM and the
+        // built-in local server. All Firestore documents are refreshed together
+        // when it expires, so edits from another admin process appear quickly.
+        return $cache->remember($key, 5, fn () => $this->fetchPublishedContent($legacy));
+    }
+
+    private function fetchPublishedContent(?array $legacy = null): array
+    {
+        $content = $this->defaults();
+        $localCache = Cache::store('file');
+        $allSectionsAvailable = true;
+        $savedSections = [];
+
         try {
-            $saved = $this->store->get('content', 'teachers') ?? [];
-            Cache::store('file')->put('firestore-content-teachers-last-known', $saved, now()->addDays(30));
+            $savedSections = $this->store->getMany('content', array_keys($content));
         } catch (\Throwable $exception) {
-            Log::warning('Data guru Firestore tidak dapat dibaca; memakai salinan lokal terakhir.', [
+            $allSectionsAvailable = false;
+            Log::warning('Konten Firestore tidak dapat dibaca; memakai konten terakhir yang tersimpan lokal.', [
                 'exception' => $exception::class,
             ]);
-            $saved = Cache::store('file')->get('firestore-content-teachers-last-known', []);
         }
-        unset($saved['id']);
+
+        foreach ($content as $section => $default) {
+            $saved = $savedSections[$section] ?? null;
+            if (is_array($saved)) {
+                unset($saved['id']);
+                $content[$section] = self::mergeDefaults($default, $saved);
+                $localCache->put($this->lastKnownKey($section), $saved, now()->addDays(30));
+            } elseif (! $allSectionsAvailable) {
+                // Batch reads failed; use the matching last-known document below.
+                $saved = null;
+            } else {
+                continue;
+            }
+
+            if (! is_array($saved)) {
+                $allSectionsAvailable = false;
+                $saved = $localCache->get($this->lastKnownKey($section));
+                if (is_array($saved)) $content[$section] = self::mergeDefaults($default, $saved);
+            }
+        }
+
+        // Teacher directory also comes from the same Firestore read as every
+        // other landing page section so the admin and public view cannot drift.
+        $saved = $savedSections['teachers'] ?? null;
+        if (is_array($saved)) {
+            unset($saved['id']);
+            $localCache->put($this->lastKnownKey('teachers'), $saved, now()->addDays(30));
+        } elseif ($allSectionsAvailable) {
+            $saved = [];
+        } else {
+            $saved = $localCache->get($this->lastKnownKey('teachers'), []);
+        }
         $content['teachers'] = TeacherDirectory::withDefaults(self::mergeDefaults(
-            $this->defaults()['teachers'], $saved
+            $content['teachers'], is_array($saved) ? $saved : []
         ));
         unset($content['home']['principal_name']);
+
+        if ($allSectionsAvailable) {
+            $localCache->put('school-content-last-known', $content, now()->addDays(30));
+        } elseif ($lastKnown = $localCache->get('school-content-last-known', $legacy)) {
+            // A transient Firestore error should not combine old and new sections.
+            $content = $lastKnown;
+        }
+
         return $content;
     }
 
@@ -81,7 +120,20 @@ class SchoolContent
         }
         if ($section === 'home') unset($data['principal_name']);
         $this->store->put('content', $section, $data);
-        Cache::store('file')->forget('school-content-'.config('school.store'));
+        $cache = Cache::store('file');
+        $key = 'school-content-'.config('school.store');
+        $cache->forget($key);
+        $cache->put($this->lastKnownKey($section), $data, now()->addDays(30));
+
+        // Keep this process's published snapshot in sync too. Other web servers
+        // will refresh their own short cache from Firestore within five seconds.
+        $published = $cache->get('school-content-last-known', $this->defaults());
+        $published[$section] = $section === 'teachers'
+            ? TeacherDirectory::withDefaults($data)
+            : self::mergeDefaults($published[$section] ?? $this->defaults()[$section], $data);
+        unset($published['home']['principal_name']);
+        $cache->put('school-content-last-known', $published, now()->addDays(30));
+        $cache->put($key, $published, 5);
     }
 
     public function editableFields(string $section, array $data): array
@@ -92,5 +144,10 @@ class SchoolContent
             ! str_starts_with($key, 'structure.') && $key !== 'demo_profiles'
             && ! str_starts_with($key, 'featured_people.')
             && ! preg_match('/\.(role|group|portrait)$|\.members\./', $key), ARRAY_FILTER_USE_KEY);
+    }
+
+    private function lastKnownKey(string $section): string
+    {
+        return 'firestore-content-'.$section.'-last-known';
     }
 }

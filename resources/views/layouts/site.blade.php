@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{ $site['home']['description'] }}">
@@ -8,10 +8,13 @@
     <link rel="icon" href="{{ $site['settings']['logo'] }}" type="image/png">
     <link rel="preload" href="/assets/fonts/Poppins-Regular.ttf" as="font" type="font/ttf" crossorigin>
     <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="/css/appearance.css">
     <link rel="stylesheet" href="/css/hero-motion.css">
     <link rel="stylesheet" href="/css/announcement.css">
     @if(($page ?? '') === 'teachers')<link rel="stylesheet" href="/css/team-directory.css">@endif
     @if(($page ?? '') === 'registration')<link rel="stylesheet" href="/css/registration.css">@endif
+    <script>try{document.documentElement.dataset.theme=localStorage.getItem('scn-theme')||'light'}catch(e){}</script>
+    <script src="/js/language.js" defer></script>
     <script src="/js/site.js" defer></script>
 </head>
 <body class="page-{{ $page ?? 'registration' }}">
@@ -29,6 +32,10 @@
             <a href="{{ route($key) }}" @if(($page ?? '') === $key) aria-current="page" @endif>{{ $label }}</a>
             @endforeach
         </nav>
+        <div class="site-preferences" aria-label="Pengaturan tampilan">
+            <button class="preference-button" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" title="Mode gelap"><span aria-hidden="true">☾</span></button>
+            <button class="preference-button language-toggle" type="button" data-language-toggle aria-label="Switch to English" title="English">EN</button>
+        </div>
         <a class="button small" href="{{ route('registration', 1) }}">Daftar Sekarang</a>
         <button class="menu-toggle" aria-controls="navigation" aria-expanded="false" aria-label="Buka menu"><span></span><span></span><span></span></button>
     </div>

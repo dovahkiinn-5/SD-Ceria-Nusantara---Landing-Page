@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\DocumentStore;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\Pool;
 
 class FirestoreDocumentStore implements DocumentStore
 {
@@ -68,6 +69,37 @@ class FirestoreDocumentStore implements DocumentStore
     {
         $response = $this->client()->get($this->path($collection, $id));
         return $response->status() === 404 ? null : $this->document($response->throw()->json());
+    }
+
+    public function getMany(string $collection, array $ids): array
+    {
+        if ($ids === []) return [];
+
+        $token = $this->accessToken();
+        $options = (new FirebaseCredentials)->httpOptions();
+        $responses = Http::pool(function (Pool $pool) use ($collection, $ids, $token, $options) {
+            $requests = [];
+            foreach ($ids as $id) {
+                $requests[] = $pool->as((string) $id)
+                    ->withToken($token)
+                    ->acceptJson()
+                    ->withOptions($options)
+                    ->timeout(8)
+                    ->connectTimeout(4)
+                    ->baseUrl($this->endpoint())
+                    ->get($this->path($collection, (string) $id));
+            }
+            return $requests;
+        });
+
+        $documents = [];
+        foreach ($ids as $id) {
+            $response = $responses[(string) $id];
+            $documents[$id] = $response->status() === 404
+                ? null
+                : $this->document($response->throw()->json());
+        }
+        return $documents;
     }
 
     public function put(string $collection, string $id, array $data): void

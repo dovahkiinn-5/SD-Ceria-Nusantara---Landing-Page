@@ -76,14 +76,17 @@ class AdminController extends Controller
         $record = $store->get($collection, $id);
         abort_unless($record, 404);
         foreach ($record['documents'] ?? [] as $file) $storage->delete($file['path']);
+        if (! empty($record['payment']['proof']['path'])) $storage->delete($record['payment']['proof']['path']);
         $store->delete($collection, $id);
         return redirect()->route('admin.records',$collection)->with('status','Data dan berkas berhasil dihapus.');
     }
     public function document(DocumentStore $store, FirestoreFileStorage $storage, string $id, string $field)
     {
-        abort_unless(in_array($field,['birth_certificate','family_card','child_identity_card','photo']),404);
+        abort_unless(in_array($field,['birth_certificate','family_card','child_identity_card','photo','payment_proof']),404);
         $record = $store->get('applications',$id);
-        $file = $record['documents'][$field] ?? null;
+        $file = $field === 'payment_proof'
+            ? ($record['payment']['proof'] ?? null)
+            : ($record['documents'][$field] ?? null);
         $download = $file ? $storage->get($file['path']) : null;
         abort_unless($download,404);
         return response()->streamDownload(

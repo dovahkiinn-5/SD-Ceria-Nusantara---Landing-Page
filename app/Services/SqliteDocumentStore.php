@@ -18,6 +18,13 @@ class SqliteDocumentStore implements DocumentStore
         return $row ? ['id' => $id] + json_decode($row->payload, true, 512, JSON_THROW_ON_ERROR) : null;
     }
 
+    public function getMany(string $collection, array $ids): array
+    {
+        $documents = [];
+        foreach ($ids as $id) $documents[$id] = $this->get($collection, $id);
+        return $documents;
+    }
+
     public function put(string $collection, string $id, array $data): void
     {
         unset($data['id']);

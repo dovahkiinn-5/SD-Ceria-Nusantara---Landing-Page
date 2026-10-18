@@ -57,9 +57,10 @@ Artisan::command('school:admin-reset-password {email}', function (DocumentStore 
 Artisan::command('school:firebase-check', function () {
     if (config('school.store') !== 'firestore') { $this->error('Atur SCHOOL_STORE=firestore terlebih dahulu.'); return 1; }
     try {
-        // Listing an empty collection succeeds; a missing database must fail.
-        app(DocumentStore::class)->page('content', null, 1);
-        $this->info('Koneksi dan autentikasi Firestore berhasil.');
+        // Probe the same document-read path used by the public landing pages.
+        $documents = app(DocumentStore::class)->getMany('content', ['home', 'settings', 'teachers']);
+        $found = count(array_filter($documents));
+        $this->info("Koneksi dan autentikasi Firestore berhasil. Dokumen konten ditemukan: {$found}/3.");
     } catch (\Throwable $e) {
         report($e);
         $status = $e instanceof \Illuminate\Http\Client\RequestException ? $e->response->status() : null;

@@ -131,8 +131,6 @@ class RegistrationController extends Controller
             return redirect()->route('registration', $draft['completed'] + 1);
         }
 
-        $request->validate(['consent' => 'accepted']);
-
         foreach (self::DOCUMENT_FIELDS as $field) {
             $file = $draft['documents'][$field] ?? null;
             if (! $file || empty($file['path']) || ! $storage->exists($file['path'])) {
@@ -142,9 +140,50 @@ class RegistrationController extends Controller
             }
         }
 
+        $paymentData = $request->validate([
+            'payment_method' => ['required', Rule::in(['offline', 'transfer'])],
+            'payment_proof' => [
+                Rule::requiredIf(fn () => $request->input('payment_method') === 'transfer'
+                    && (empty($draft['payment']['proof']['path'])
+                        || ! $storage->exists($draft['payment']['proof']['path']))),
+                'nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024',
+            ],
+            'consent' => 'accepted',
+        ]);
+
+        $paymentMethod = $paymentData['payment_method'];
+        $previousProof = $draft['payment']['proof'] ?? null;
+        if ($paymentMethod === 'transfer') {
+            if ($proof = $request->file('payment_proof')) {
+                $path = 'applications/'.$draft['reference'].'/payment/'.Str::uuid().'.'.$proof->extension();
+                $storage->putUploadedFile($path, $proof);
+                if ($previousProof && ! empty($previousProof['path'])) {
+                    $storage->delete($previousProof['path']);
+                }
+                $previousProof = [
+                    'path' => $path,
+                    'name' => $proof->getClientOriginalName(),
+                    'size' => $proof->getSize(),
+                ];
+            }
+            $draft['payment'] = [
+                'method' => 'transfer', 'amount' => 250000, 'status' => 'menunggu_verifikasi',
+                'bank' => 'BCA', 'account_number' => '8535459831',
+                'account_name' => 'Muhamad Azmer Fahrezi', 'proof' => $previousProof,
+            ];
+        } else {
+            if ($previousProof && ! empty($previousProof['path'])) {
+                $storage->delete($previousProof['path']);
+            }
+            $draft['payment'] = ['method' => 'offline', 'amount' => 250000, 'status' => 'belum_dibayar'];
+        }
+
+        $request->session()->put('registration', $draft);
+
         $record = [
             'reference' => $draft['reference'], 'submission_hash' => hash('sha256', $draft['token']),
             'child' => $draft['child'], 'parent' => $draft['parent'], 'documents' => $draft['documents'],
+            'payment' => $draft['payment'],
             'status' => 'baru', 'notes' => '', 'consent_at' => now()->toIso8601String(),
             'created_at' => now()->toIso8601String(),
         ];
@@ -161,15 +200,18 @@ class RegistrationController extends Controller
         return redirect()->route('registration.success');
     }
 
-    public function success(Request $request, SchoolContent $content)
+    public function success(Request $request, SchoolContent $content, DocumentStore $store)
     {
         if (! $request->session()->has('registration_success')) {
             return redirect()->route('registration', 1);
         }
 
+        $record = $store->get('applications', $request->session()->get('registration_success'));
+
         return view('registration.success', [
             'site' => $content->all(), 'page' => 'registration',
             'reference' => $request->session()->get('registration_success'),
+            'payment' => $record['payment'] ?? null,
         ]);
     }
 
