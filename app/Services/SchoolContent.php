@@ -11,39 +11,49 @@ class SchoolContent
     public function defaults(): array
     {
         $content = require resource_path('content/site.php');
-        $content['teachers'] = (new TeacherDirectory)->normalize($content['teachers']);
-        unset($content['home']['principal_name']);
+        $content['teachers'] = TeacherDirectory::withDefaults($content['teachers']);
         return $content;
     }
     public function all(): array
     {
-        $content = Cache::remember('school-content-'.config('school.store'), 300, function () {
+        $all = Cache::remember('school-content-'.config('school.store'), 300, function () {
             $content = $this->defaults();
             foreach ($content as $key => $default) {
-                if ($key === 'teachers') continue;
                 $saved = $this->store->get('content', $key);
                 if ($saved) {
                     unset($saved['id']);
-                    $content[$key] = array_replace_recursive($default, $saved);
+                    if ($key === 'teachers') $saved = TeacherDirectory::withDefaults($saved);
+                    $content[$key] = self::mergeDefaults($default, $saved);
                 }
             }
             return $content;
         });
+        // Old cached documents may predate the directory contract.
+        $all['teachers'] = TeacherDirectory::withDefaults($all['teachers']);
+        unset($all['home']['principal_name']);
+        return $all;
+    }
 
-        // Read profiles live so edits in the Firebase console also appear on reload.
-        $saved = $this->store->get('content', 'teachers') ?? [];
-        $base = (require resource_path('content/site.php'))['teachers'];
-        $content['teachers'] = (new TeacherDirectory)->normalize(array_replace($base, $saved));
-        unset($content['home']['principal_name']);
-        return $content;
+    public static function mergeDefaults(array $defaults, array $saved): array
+    {
+        foreach ($saved as $key => $value) {
+            $defaults[$key] = is_array($value) && $value !== [] && !array_is_list($value)
+                && isset($defaults[$key]) && is_array($defaults[$key]) && !array_is_list($defaults[$key])
+                ? self::mergeDefaults($defaults[$key], $value) : $value;
+        }
+        return $defaults;
     }
     public function save(string $section, array $data): void
     {
-        if ($section === 'teachers') $data = (new TeacherDirectory)->normalize($data);
+        if ($section === 'teachers') {
+            $data = TeacherDirectory::withDefaults($data);
+            TeacherDirectory::validate($data);
+        }
         if ($section === 'home') unset($data['principal_name']);
         $this->store->put('content', $section, $data);
         Cache::forget('school-content-'.config('school.store'));
     }
+<<<<<<< HEAD
 
     public function editableFields(string $section, array $data): array
     {
@@ -54,4 +64,6 @@ class SchoolContent
             && !str_starts_with($key, 'featured_people.')
             && !preg_match('/\.(role|group|portrait)$|\.members\./', $key), ARRAY_FILTER_USE_KEY);
     }
+=======
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
 }

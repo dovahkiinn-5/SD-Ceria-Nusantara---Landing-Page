@@ -2,17 +2,31 @@
 @section('title', $site['teachers']['title'].' — SD Ceria Nusantara')
 @section('content')
 @php
+<<<<<<< HEAD
     $people = $site['teachers']['directory'];
     $structure = $site['teachers']['structure'];
     $subjects = $site['teachers']['subjects'];
+=======
+    $directory = $site['teachers'];
+    $people = $directory['people'];
+    $structure = $directory['structure'];
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
     $groupCounts = array_count_values(array_column($people, 'group'));
     $gradeCount = count(array_filter(array_keys($people), fn ($id) => str_starts_with($id, 'wali-kelas-')));
 @endphp
 <section class="people-hero outer">
+<<<<<<< HEAD
     <div><p class="eyebrow">{{ $site['teachers']['eyebrow'] }}</p><h1>{!! nl2br(e($site['teachers']['title'])) !!}</h1><p>{{ $site['teachers']['description'] }}</p><div class="people-hero-actions"><a class="button" href="#direktori">Berkenalan dengan tim ↗</a><a class="text-link" href="#struktur">Lihat struktur sekolah ↓</a></div><div class="people-facts"><span><strong>{{ $gradeCount }}</strong> jenjang kelas</span><span><strong>{{ count($people) }}</strong> profil anggota tim</span><span><strong>1</strong> semangat mendampingi</span></div></div>
     <div class="people-hero-photo"><x-staff-portrait :index="$people[$structure['head']]['portrait']" :name="$people[$structure['head']]['name']" :photo="$people[$structure['head']]['photo']"/><div class="people-photo-note"><span aria-hidden="true">♡</span><div><strong>Setiap anak dikenal,</strong><br>setiap keluarga didengar.</div></div><span class="people-photo-badge">Bertumbuh bersama</span></div>
 </section>
 @if($site['teachers']['demo_profiles'] ?? false)<div class="container people-demo-note"><span aria-hidden="true">ⓘ</span><p><strong>Profil contoh.</strong> Nama, foto, jabatan, dan pembagian tugas di halaman ini adalah data contoh.</p></div>@else<div class="container people-demo-note"><span aria-hidden="true">ⓘ</span><p><strong>Profil tim sekolah.</strong> Nama, foto, jabatan, dan pembagian tugas mengikuti data yang dikelola sekolah.</p></div>@endif
+=======
+    <div><p class="eyebrow">{{ $directory['directory_eyebrow'] }}</p><h1 style="white-space:pre-line">{{ $directory['directory_title'] }}</h1><p>{{ $directory['directory_description'] }}</p><div class="people-hero-actions"><a class="button" href="#direktori">Berkenalan dengan tim ↗</a><a class="text-link" href="#struktur">Lihat struktur sekolah ↓</a></div><div class="people-facts"><span><strong>6</strong> jenjang kelas</span><span><strong>{{ count($people) }}</strong> {{ $directory['demo_profiles'] ? 'profil contoh' : 'anggota tim' }}</span><span><strong>1</strong> semangat mendampingi</span></div></div>
+    @php($head = $people[$structure['head']])
+    <div class="people-hero-photo"><x-staff-portrait :index="$head['portrait']" :name="$head['name']" :photo="$head['photo'] ?? null"/><div class="people-photo-note"><span aria-hidden="true">♡</span><div><strong>Setiap anak dikenal,</strong><br>setiap keluarga didengar.</div></div><span class="people-photo-badge">Bertumbuh bersama</span></div>
+</section>
+@if($directory['demo_profiles'])<div class="container people-demo-note"><span aria-hidden="true">ⓘ</span><p><strong>Contoh profil sekolah.</strong> Seluruh nama, foto, jabatan, dan pembagian tugas di halaman ini adalah data dummy. Susunan guru, layanan, dan mata pelajaran sebenarnya perlu dikonfirmasi kepada sekolah.</p></div>@endif
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
 <section class="section people-values"><div class="container"><x-heading eyebrow="LEBIH DARI MENGAJAR" title="Mendampingi dengan hati" subtitle="Kami ingin anak merasa aman, orang tua merasa tenang, dan komunikasi selalu terbuka."/><x-cards :items="$site['teachers']['values']"/></div></section>
 <section class="section tinted" id="direktori"><div class="container">
     <x-heading :eyebrow="$site['teachers']['directory_eyebrow']" :title="$site['teachers']['directory_title']" :subtitle="$site['teachers']['directory_description']"/>
@@ -25,9 +39,14 @@
     </div><p class="people-empty" data-team-empty hidden>Belum ada profil yang cocok. Coba nama atau peran lain.</p>
 </div></section>
 <section class="section people-subjects" id="mata-pelajaran"><div class="container"><x-heading eyebrow="BELAJAR UTUH, BERTUMBUH BERSAMA" title="Siapa yang mendampingi pelajaran anak?" subtitle="Wali kelas mendampingi pelajaran inti, bekerja sama dengan guru bidang studi."/><div class="subject-grid">
+<<<<<<< HEAD
 @foreach($subjects as $subject)
 @php($assignedTeachers = collect($subject['members'] ?? [])->map(fn ($id) => $people[$id]['name'] ?? null)->filter()->join(', '))
 <article class="subject-card"><span class="subject-number" aria-hidden="true">{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><h3>{{ $subject['title'] }}</h3><p>{{ $subject['text'] }}</p><div>{{ $assignedTeachers ?: 'Belum ditentukan' }}</div></article>
+=======
+@foreach($directory['subjects'] as $subject)
+<article class="subject-card"><span class="subject-number" aria-hidden="true">{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><h3>{{ $subject['title'] }}</h3><p>{{ $subject['text'] }}</p><div>{{ $subject['by'] ?? '' }}</div></article>
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
 @endforeach
 </div><p class="people-subject-note">Pembagian pelajaran menyesuaikan jenjang, kurikulum, dan program sekolah. Muatan lokal, pilihan seni, serta kegiatan pengayaan dapat berbeda pada setiap kelas.</p></div></section>
 <section class="section tinted people-organization" id="struktur"><div class="container"><x-heading eyebrow="SALING TERHUBUNG, SALING MENDUKUNG" title="Struktur keluarga sekolah" subtitle="Seluruh guru dan staf ditampilkan per orang agar peran setiap anggota tim mudah dikenali."/>

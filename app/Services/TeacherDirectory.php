@@ -2,23 +2,15 @@
 
 namespace App\Services;
 
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
+// Shared content contract: keep this class and the fallback resource in both projects.
 class TeacherDirectory
 {
-    private const IDS = [
-        'kepala-sekolah', 'wakil-kurikulum', 'wakil-kesiswaan',
-        'wali-kelas-1', 'wali-kelas-2', 'wali-kelas-3', 'wali-kelas-4', 'wali-kelas-5', 'wali-kelas-6',
-        'guru-agama-islam', 'guru-agama-kristen', 'guru-agama-katolik', 'guru-agama-hindu',
-        'guru-agama-buddha', 'guru-agama-khonghucu', 'guru-bahasa-inggris', 'guru-pjok',
-        'guru-seni-budaya', 'guru-muatan-lokal', 'konselor', 'pendamping-inklusif',
-        'tata-usaha', 'bendahara', 'operator', 'pustakawan', 'petugas-uks', 'teknisi',
-        'keamanan', 'kebersihan', 'kantin',
-    ];
-    private const LEGACY_TEAM = [0, 1, 2, 3, 16, 21];
-
-    public function defaults(): array
+    public static function defaults(): array
     {
+<<<<<<< HEAD
         $source = require resource_path('content/staff-directory.php');
         $directory = [];
         foreach ($source['people'] as $index => $person) {
@@ -59,12 +51,19 @@ class TeacherDirectory
             'featured_people' => $featuredPeople,
             'structure' => $structure,
             'subjects' => $subjects,
+=======
+        return (require resource_path('content/staff-directory.php')) + [
+            'directory_eyebrow' => 'KENALI KELUARGA SEKOLAH KAMI',
+            'directory_title' => "Wajah ramah,\nteman tumbuh anak.",
+            'directory_description' => 'Di kelas, di perpustakaan, hingga di gerbang sekolah—ada tim yang siap mendampingi langkah kecil buah hati Anda.',
+            'demo_profiles' => true,
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
         ];
     }
 
-    /** Convert legacy numeric profiles once, preserving names/photos but restoring school positions. */
-    public function normalize(array $data): array
+    public static function withDefaults(array $saved): array
     {
+<<<<<<< HEAD
         $defaults = $this->defaults();
         if (($data['schema_version'] ?? null) !== 2) {
             $legacyDefaults = (require resource_path('content/site.php'))['teachers']['team'];
@@ -149,17 +148,50 @@ class TeacherDirectory
     }
 
     public function positions(array $structure): array
-    {
-        $ids = [$structure['head']];
-        foreach ($structure['branches'] as $branch) {
-            $ids[] = $branch['lead'];
-            foreach ($branch['teams'] as $team) array_push($ids, ...$team['members']);
+=======
+        // The organization chart owns the profiles. Legacy copies must never override it.
+        if (!isset($saved['people']) && !empty($saved['directory'])) $saved['people'] = $saved['directory'];
+        $data = $saved + self::defaults();
+        $data['people'] = array_map(function (array $person) {
+            if (isset($person['portrait']) && ctype_digit((string) $person['portrait'])) $person['portrait'] = (int) $person['portrait'];
+            return $person + ['photo'=>null];
+        }, $data['people']);
+        if (!array_key_exists('featured_people', $data)) {
+            $featured = [];
+            foreach ($saved['team'] ?? [] as $member) {
+                $index = array_search($member['name'], array_column($data['people'], 'name'), true);
+                if ($index === false) {
+                    // Old directory and organization profiles share a portrait identity.
+                    $old = collect($saved['directory'] ?? [])->firstWhere('name', $member['name']);
+                    $matches = $old && isset($old['portrait'])
+                        ? array_keys(array_filter($data['people'], fn ($person) => $person['portrait'] === (int) $old['portrait'])) : [];
+                    if (count($matches) === 1) $index = $matches[0];
+                }
+                if ($index !== false) $featured[] = $index;
+            }
+            $data['featured_people'] = array_values(array_unique($featured ?: array_column($data['structure']['branches'], 'lead')));
         }
-        return $ids;
+        if (isset($data['subjects']) && is_array($data['subjects'])) {
+            $defaultSubjects = self::defaults()['subjects'];
+            foreach ($data['subjects'] as $i => &$sub) {
+                if (is_array($sub) && !isset($sub['by'])) $sub['by'] = $defaultSubjects[$i]['by'] ?? '';
+            }
+            unset($sub);
+        }
+        unset($data['directory'], $data['team']);
+        return $data;
     }
 
-    public function validate(array $data): void
+    public static function principal(array $data): array
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
     {
+        $data = self::withDefaults($data);
+        return $data['people'][$data['structure']['head']];
+    }
+
+    public static function homepagePeople(array $data): array
+    {
+<<<<<<< HEAD
         $structure = $data['structure'] ?? [];
         $directory = $data['directory'] ?? [];
         if (!isset($structure['head'], $structure['branches']) || !is_array($directory)) {
@@ -187,5 +219,44 @@ class TeacherDirectory
         if (array_diff($data['featured_people'] ?? [], array_keys($directory))) {
             throw ValidationException::withMessages(['values' => 'Profil unggulan tidak ditemukan dalam direktori guru dan staf.']);
         }
+=======
+        $data = self::withDefaults($data);
+        $indices = array_unique([$data['structure']['head'], ...$data['featured_people']]);
+        return array_values(array_map(fn ($index) => $data['people'][$index], $indices));
+    }
+
+    public static function validate(array $data): void
+    {
+        $indices = array_keys($data['people'] ?? []);
+        Validator::make($data, [
+            'people' => ['required', 'array', 'list', 'min:1', 'max:100'],
+            'people.*.name' => 'required|string|max:150',
+            'people.*.role' => 'required|string|max:150',
+            'people.*.description' => 'required|string|max:2000',
+            'people.*.group' => ['required', Rule::in(['pimpinan', 'guru', 'staf'])],
+            'people.*.portrait' => 'required|integer|min:0|max:29',
+            'people.*.photo' => ['nullable', 'string', 'regex:#^/(?:assets/(?:design|team)|media)/[a-zA-Z0-9_-]+\.(?:png|jpe?g|webp)$#'],
+            'featured_people' => 'present|array|list|max:100',
+            'featured_people.*' => ['required', 'integer', 'distinct', Rule::in($indices)],
+            'subjects' => 'present|array|list|max:100',
+            'subjects.*.title' => 'required|string|max:150',
+            'subjects.*.by' => 'required|string|max:300',
+            'subjects.*.text' => 'required|string|max:2000',
+            'structure.head' => ['required', 'integer', Rule::in($indices)],
+            'structure.branches' => 'present|array|list|max:30',
+            'structure.branches.*.title' => 'required|string|max:150',
+            'structure.branches.*.summary' => 'required|string|max:2000',
+            'structure.branches.*.tone' => ['required', Rule::in(['blue', 'green', 'yellow'])],
+            'structure.branches.*.lead' => ['required', 'integer', Rule::in($indices)],
+            'structure.branches.*.teams' => 'present|array|list|max:100',
+            'structure.branches.*.teams.*.title' => 'required|string|max:150',
+            'structure.branches.*.teams.*.members' => 'present|array|list|max:100',
+            'structure.branches.*.teams.*.members.*' => ['required', 'integer', Rule::in($indices)],
+            'directory_eyebrow' => 'required|string|max:150',
+            'directory_title' => 'required|string|max:300',
+            'directory_description' => 'required|string|max:2000',
+            'demo_profiles' => 'required|boolean',
+        ], ['in' => 'Pilihan :attribute tidak tersedia. Pilih anggota atau kategori yang ada.'])->validate();
+>>>>>>> e4cb613de806a237d4c0e8e3f83d86b3687b98c3
     }
 }
