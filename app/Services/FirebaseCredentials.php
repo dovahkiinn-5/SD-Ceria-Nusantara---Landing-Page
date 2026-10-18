@@ -11,6 +11,7 @@ class FirebaseCredentials
 {
     // Process memory only: a Firestore cache must never recursively authenticate itself.
     private static array $tokens = [];
+    private static array $unavailableUntil = [];
 
     public function data(): array
     {
@@ -56,7 +57,18 @@ class FirebaseCredentials
         $options = $this->httpOptions();
         $key = hash('sha256', json_encode([$credentials, $scope, $options], JSON_THROW_ON_ERROR));
         if ((self::$tokens[$key]['expires_at'] ?? 0) > time()) return self::$tokens[$key]['token'];
-        $token = $this->fetchToken($credentials, $scope, $options);
+        if ((self::$unavailableUntil[$key] ?? 0) > time()) {
+            throw new RuntimeException('Firebase sementara tidak dapat dijangkau.');
+        }
+        try {
+            $token = $this->fetchToken($credentials, $scope, $options);
+        } catch (\Throwable $exception) {
+            // Avoid retrying a known-outage token request for every session/content read
+            // in the same PHP worker. New requests can retry shortly afterward.
+            self::$unavailableUntil[$key] = time() + 15;
+            throw new RuntimeException('Autentikasi Firebase gagal sementara.', 0, $exception);
+        }
+        unset(self::$unavailableUntil[$key]);
         if (!is_string($token['access_token'] ?? null) || $token['access_token'] === '') {
             throw new RuntimeException('Autentikasi Firebase gagal.');
         }
