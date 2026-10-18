@@ -52,6 +52,62 @@ class SchoolWorkflowTest extends TestCase
         $this->assertCount(30, array_unique($renderedNames));
     }
 
+    public function test_admin_directory_edits_are_saved_and_rendered_on_teacher_page(): void
+    {
+        $content = app(\App\Services\SchoolContent::class);
+        $teachers = $content->all()['teachers'];
+        $teachers['directory'][0]['name'] = 'Kepala Sekolah Uji Firestore';
+        $teachers['directory'][0]['photo'] = '/assets/team/maria-simanjuntak.jpg';
+        $this->actingAs(new \Illuminate\Auth\GenericUser([
+            'id'=>'test-admin', 'name'=>'Admin Uji', 'email'=>'admin@example.test',
+            'role'=>'owner', 'active'=>true, 'password'=>'test-password-hash', 'remember_token'=>'',
+        ]));
+        $this->put('/admin/konten/teachers', ['values'=>\Illuminate\Support\Arr::dot($teachers)])
+            ->assertSessionHasNoErrors()->assertRedirect();
+        $saved = app(DocumentStore::class)->get('content', 'teachers');
+        $this->assertSame('Kepala Sekolah Uji Firestore', $saved['directory'][0]['name']);
+        $this->assertSame($saved['directory'][0]['name'], $saved['team'][0]['name']);
+        $this->assertSame($saved['directory'][0]['photo'], $saved['team'][0]['photo']);
+        $this->get('/guru-staf')->assertOk()->assertSee('Kepala Sekolah Uji Firestore')
+            ->assertSee('/assets/team/maria-simanjuntak.jpg');
+        $this->get('/')->assertOk()->assertSee('Kepala Sekolah Uji Firestore')
+            ->assertSee('/assets/team/maria-simanjuntak.jpg');
+        $this->get('/admin/konten/teachers')->assertOk()->assertSee('Kepala Sekolah Uji Firestore')
+            ->assertDontSee('values[team.0.name]', false);
+    }
+
+    public function test_existing_legacy_principal_edits_are_visible_in_directory_and_home(): void
+    {
+        $content = app(\App\Services\SchoolContent::class);
+        $teachers = $content->defaults()['teachers'];
+        $teachers['team'][0]['name'] = 'Pudji Astuti';
+        $teachers['team'][0]['photo'] = '/assets/team/maria-simanjuntak.jpg';
+        app(DocumentStore::class)->put('content', 'teachers', $teachers);
+        \Illuminate\Support\Facades\Cache::flush();
+        $response = $this->get('/guru-staf')->assertOk()->assertSee('Pudji Astuti')
+            ->assertSee('/assets/team/maria-simanjuntak.jpg')
+            ->assertDontSee('Ratna Puspitasari');
+        $this->assertStringContainsString('data-organization-name="Pudji Astuti"', $response->getContent());
+        $this->get('/')->assertOk()->assertSee('Pudji Astuti');
+    }
+
+    public function test_firestore_profile_changes_bypass_warm_content_cache_on_all_public_pages(): void
+    {
+        $content = app(\App\Services\SchoolContent::class);
+        $teachers = $content->defaults()['teachers'];
+        $this->get('/')->assertOk();
+        $teachers['directory'][0]['name'] = 'Pudji Astuti dari Firestore';
+        $teachers['directory'][0]['photo'] = '/assets/team/maria-simanjuntak.jpg';
+        // Simulate an external console edit, without SchoolContent::save or cache invalidation.
+        app(DocumentStore::class)->put('content', 'teachers', $teachers);
+        foreach (['/', '/guru-staf', '/tentang-kami'] as $path) {
+            $this->get($path)->assertOk()->assertSee('Pudji Astuti dari Firestore')
+                ->assertDontSee('Ratna Puspitasari');
+        }
+        $this->get('/guru-staf')->assertSee('/assets/team/maria-simanjuntak.jpg');
+        $this->get('/')->assertSee('/assets/team/maria-simanjuntak.jpg');
+    }
+
     public function test_registration_steps_cannot_be_skipped_and_fields_are_validated(): void
     {
         $this->get('/pendaftaran/4')->assertRedirect('/pendaftaran/1');

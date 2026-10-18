@@ -7,7 +7,7 @@
 @foreach($fields as $key=>$value)
 @if(is_array($value)) @continue @endif
 @php($imageField=(bool)preg_match('/(^image$|_image$|^logo$|\.photo$)/',$key))
-@if(str_ends_with($key,'.icon'))<input type="hidden" name="values[{{ $key }}]" value="{{ $value }}">@else
+@if(str_ends_with($key,'.icon') || str_ends_with($key,'.portrait') || str_ends_with($key,'.group'))<input type="hidden" name="values[{{ $key }}]" value="{{ $value }}">@else
 <div class="content-field"><label for="content-{{ $loop->index }}">{{ \App\Services\ContentLabels::label($key) }}</label>
 @if($imageField)<img class="editor-image" src="{{ $value }}" alt="Pratinjau gambar"><input type="hidden" name="values[{{ $key }}]" value="{{ $value }}"><input id="content-{{ $loop->index }}" type="file" name="uploads[{{ $loop->index }}]" accept=".jpg,.jpeg,.png,.webp"><small>JPG, PNG, atau WebP. Maksimal 1 MB. Biarkan kosong untuk mempertahankan gambar.</small>
 @elseif(is_bool($value))<select id="content-{{ $loop->index }}" name="values[{{ $key }}]"><option value="1" @selected($value)>Ya</option><option value="0" @selected(!$value)>Tidak</option></select>
