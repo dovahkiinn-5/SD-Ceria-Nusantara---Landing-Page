@@ -133,19 +133,21 @@ class AdminController extends Controller
         abort_unless(isset($all[$section]),404);
         $fields = Arr::dot($all[$section]);
         $request->validate(['values'=>'required|array','uploads.*'=>'nullable|file|mimes:jpg,jpeg,png,webp|max:1024']);
-        $data = [];
+        $data = $all[$section];
         foreach ($fields as $key => $value) {
-            $new = $request->input('values')[$key] ?? $value;
+            if (is_array($value) || str_ends_with($key, '.icon') || str_ends_with($key, '.portrait')) continue;
+            $new = $request->input('values')[$key] ?? (is_bool($value) ? ($value ? '1' : '0') : (string)$value);
             Validator::make(['value'=>$new],['value'=>'nullable|string|max:10000'])->validate();
             if (preg_match('/(^image$|_image$|^logo$|\.photo$)/',$key)) {
-                if (! preg_match('#^/(?:assets/design|media)/[a-zA-Z0-9_.-]+\.(png|jpe?g|webp)$#',(string)$new)) {
-                    throw ValidationException::withMessages(['values'=>'Gunakan gambar lokal yang diunggah atau aset desain yang tersedia.']);
-                }
                 $index = array_search($key,array_keys($fields));
                 if ($file = $request->file('uploads.'.$index)) {
                     $path = 'media/'.Str::uuid().'.'.$file->guessExtension();
                     $storage->putUploadedFile($path, $file);
                     $new = '/'.$path;
+                }
+                if (!(preg_match('/^people\.\d+\.photo$/', $key) && ($new === '' || $new === null))
+                    && !preg_match('#^/(?:assets/(?:design|team)|media)/[a-zA-Z0-9_-]+\.(png|jpe?g|webp)$#', (string)$new)) {
+                    throw ValidationException::withMessages(['values'=>'Gunakan gambar lokal yang diunggah atau aset desain yang tersedia.']);
                 }
             }
             if ($key === 'email') Validator::make(['email'=>$new],['email'=>'required|email'])->validate();
@@ -153,6 +155,9 @@ class AdminController extends Controller
             if ($key === 'map_url' && ! preg_match('#^https://(?:www\.)?google\.com/maps/#i', (string) $new)) {
                 throw ValidationException::withMessages(['values'=>'Tautan peta harus menggunakan alamat Google Maps yang aman.']);
             }
+            if (is_bool($value)) { Validator::make(['value'=>$new], ['value'=>'boolean'])->validate(); $new = (bool)$new; }
+            elseif (is_int($value)) { Validator::make(['value'=>$new], ['value'=>'integer'])->validate(); $new = (int)$new; }
+            elseif (is_float($value)) { Validator::make(['value'=>$new], ['value'=>'numeric'])->validate(); $new = (float)$new; }
             Arr::set($data,$key,$new ?? '');
         }
         $content->save($section,$data);
