@@ -2,25 +2,15 @@
 @section('title','Guru & Staf — SD Ceria Nusantara')
 @section('content')
 @php
-<<<<<<< HEAD
     $directory = $site['teachers'];
     $people = $directory['people'];
-=======
-    $directory = require resource_path('content/staff-directory.php');
-    $people = $site['teachers']['directory'];
->>>>>>> 2812c58f61084d9e538e7e37c1080590d1f8a5e7
     $structure = $directory['structure'];
     $groupCounts = array_count_values(array_column($people, 'group'));
 @endphp
 <section class="people-hero outer">
-<<<<<<< HEAD
     <div><p class="eyebrow">{{ $directory['directory_eyebrow'] }}</p><h1 style="white-space:pre-line">{{ $directory['directory_title'] }}</h1><p>{{ $directory['directory_description'] }}</p><div class="people-hero-actions"><a class="button" href="#direktori">Berkenalan dengan tim ↗</a><a class="text-link" href="#struktur">Lihat struktur sekolah ↓</a></div><div class="people-facts"><span><strong>6</strong> jenjang kelas</span><span><strong>{{ count($people) }}</strong> {{ $directory['demo_profiles'] ? 'profil contoh' : 'anggota tim' }}</span><span><strong>1</strong> semangat mendampingi</span></div></div>
     @php($head = $people[$structure['head']])
     <div class="people-hero-photo"><x-staff-portrait :index="$head['portrait']" :name="$head['name']" :photo="$head['photo'] ?? null"/><div class="people-photo-note"><span aria-hidden="true">♡</span><div><strong>Setiap anak dikenal,</strong><br>setiap keluarga didengar.</div></div><span class="people-photo-badge">Bertumbuh bersama</span></div>
-=======
-    <div><p class="eyebrow">KENALI KELUARGA SEKOLAH KAMI</p><h1>Wajah ramah,<br>teman tumbuh anak.</h1><p>Di kelas, di perpustakaan, hingga di gerbang sekolah—ada tim yang siap mendampingi langkah kecil buah hati Anda.</p><div class="people-hero-actions"><a class="button" href="#direktori">Berkenalan dengan tim ↗</a><a class="text-link" href="#struktur">Lihat struktur sekolah ↓</a></div><div class="people-facts"><span><strong>6</strong> jenjang kelas</span><span><strong>{{ count($people) }}</strong> profil contoh</span><span><strong>1</strong> semangat mendampingi</span></div></div>
-    <div class="people-hero-photo"><x-staff-portrait :index="$people[0]['portrait']" :name="$people[0]['name']" :photo="$people[0]['photo']"/><div class="people-photo-note"><span aria-hidden="true">♡</span><div><strong>Setiap anak dikenal,</strong><br>setiap keluarga didengar.</div></div><span class="people-photo-badge">Bertumbuh bersama</span></div>
->>>>>>> 2812c58f61084d9e538e7e37c1080590d1f8a5e7
 </section>
 @if($directory['demo_profiles'])<div class="container people-demo-note"><span aria-hidden="true">ⓘ</span><p><strong>Contoh profil sekolah.</strong> Seluruh nama, foto, jabatan, dan pembagian tugas di halaman ini adalah data dummy. Susunan guru, layanan, dan mata pelajaran sebenarnya perlu dikonfirmasi kepada sekolah.</p></div>@endif
 <section class="section people-values"><div class="container"><x-heading eyebrow="LEBIH DARI MENGAJAR" title="Mendampingi dengan hati" subtitle="Kami ingin anak merasa aman, orang tua merasa tenang, dan komunikasi selalu terbuka."/><x-cards :items="$site['teachers']['values']"/></div></section>

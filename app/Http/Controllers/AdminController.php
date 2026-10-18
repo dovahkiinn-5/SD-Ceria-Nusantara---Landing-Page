@@ -145,12 +145,6 @@ class AdminController extends Controller
             $new = $request->input('values')[$key] ?? (is_bool($value) ? ($value ? '1' : '0') : (string)$value);
             Validator::make(['value'=>$new],['value'=>'nullable|string|max:10000'])->validate();
             if (preg_match('/(^image$|_image$|^logo$|\.photo$)/',$key)) {
-<<<<<<< HEAD
-=======
-                if (! ($new === '' && str_ends_with($key, '.photo')) && ! preg_match('#^/(?:assets/design|assets/team|media)/[a-zA-Z0-9_.-]+\.(png|jpe?g|webp)$#',(string)$new)) {
-                    throw ValidationException::withMessages(['values'=>'Gunakan gambar lokal yang diunggah atau aset desain yang tersedia.']);
-                }
->>>>>>> 2812c58f61084d9e538e7e37c1080590d1f8a5e7
                 $index = array_search($key,array_keys($fields));
                 if ($file = $request->file('uploads.'.$index)) {
                     $path = 'media/'.Str::uuid().'.'.$file->guessExtension();
