@@ -1,5 +1,7 @@
 # Deployment Laravel + Firebase ke Vercel
 
+Deployment otomatis dari Git dinonaktifkan melalui `git.deploymentEnabled: false` di `vercel.json`. Commit dan push tetap berjalan, tanpa memicu deployment Vercel untuk branch yang memuat konfigurasi ini. Panduan di bawah disimpan sebagai referensi bila Vercel digunakan lagi. Status gagal pada commit lama tetap merupakan riwayat dan tidak menandakan push gagal.
+
 Deployment produksi memakai Firestore untuk data halaman, akun admin, pendaftar, session, cache, serta isi berkas. Tidak perlu Firebase Storage, paket Blaze, bucket, atau storage server persisten.
 
 Vercel menjalankan Laravel melalui community runtime `vercel-php@0.7.4` (PHP 8.3) di region Singapore (`sin1`). Runtime PHP ini dikelola komunitas, bukan runtime PHP resmi dari Vercel. Gunakan Node.js **22.x**, sesuai dukungan runtime PHP; versi ini ditetapkan melalui `engines.node` di `package.json`.

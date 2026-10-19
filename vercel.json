@@ -2,6 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "framework": null,
+  "git": {
+    "deploymentEnabled": false
+  },
   "regions": [
     "sin1"
   ],
