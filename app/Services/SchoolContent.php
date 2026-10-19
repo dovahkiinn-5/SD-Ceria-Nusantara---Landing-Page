@@ -91,6 +91,7 @@ class SchoolContent
             $content['teachers'], is_array($saved) ? $saved : []
         ));
         unset($content['home']['principal_name']);
+        $content = self::restoreHomeHeroIfContentIsInvalid($content);
 
         if ($allSectionsAvailable) {
             $localCache->put('school-content-last-known', $content, now()->addDays(30));
@@ -98,6 +99,30 @@ class SchoolContent
             // A transient Firestore error should not combine old and new sections.
             $content = $lastKnown;
         }
+
+        return $content;
+    }
+
+    /** Restore the bundled school hero when editorial or placeholder text was published by mistake. */
+    private static function restoreHomeHeroIfContentIsInvalid(array $content): array
+    {
+        $home = $content['home'] ?? [];
+        $heroCopy = mb_strtolower(implode(' ', array_filter([
+            $home['title'] ?? '',
+            $home['description'] ?? '',
+        ], 'is_string')));
+
+        if (! preg_match('/melankolis|guru jarang masuk|tim begadang|website hanya dikerjakan/i', $heroCopy)) {
+            return $content;
+        }
+
+        $defaults = require resource_path('content/site.php');
+        foreach (['eyebrow', 'title', 'description', 'tablet_description', 'image', 'campus_image', 'classroom_image'] as $key) {
+            if (array_key_exists($key, $defaults['home'])) {
+                $content['home'][$key] = $defaults['home'][$key];
+            }
+        }
+        $content['settings']['founded'] = $defaults['settings']['founded'];
 
         return $content;
     }
