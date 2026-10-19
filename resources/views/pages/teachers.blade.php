@@ -27,17 +27,8 @@
 </div></section>
 <section class="section people-subjects" id="mata-pelajaran"><div class="container"><x-heading eyebrow="BELAJAR UTUH, BERTUMBUH BERSAMA" title="Siapa yang mendampingi pelajaran anak?" subtitle="Wali kelas mendampingi pelajaran inti, bekerja sama dengan guru bidang studi."/><div class="subject-grid">
 @foreach($directory['subjects'] as $subject)
-@php
-    $specialistIds = match (mb_strtolower($subject['title'])) {
-        'pjok' => [16],
-        'seni dan budaya' => [17],
-        'bahasa inggris' => [15],
-        'muatan lokal' => [18],
-        default => [],
-    };
-    $subjectTeachers = array_map(fn ($id) => $people[$id]['name'], $specialistIds);
-@endphp
-<article class="subject-card"><span class="subject-number" aria-hidden="true">{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><h3>{{ $subject['title'] }}</h3><p>{{ $subject['text'] }}</p><div>{{ $subjectTeachers ? implode(', ', $subjectTeachers) : ($subject['by'] ?? '') }}</div></article>
+
+<article class="subject-card"><span class="subject-number" aria-hidden="true">{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><h3>{{ $subject['title'] }}</h3><p>{{ $subject['text'] }}</p><div>{{ $subject['by'] ?? '' }}</div></article>
 @endforeach
 </div><p class="people-subject-note">Pembagian pelajaran menyesuaikan jenjang, kurikulum, dan program sekolah. Muatan lokal, pilihan seni, serta kegiatan pengayaan dapat berbeda pada setiap kelas.</p></div></section>
 <section class="section tinted people-organization" id="struktur"><div class="container"><x-heading eyebrow="SALING TERHUBUNG, SALING MENDUKUNG" title="Struktur keluarga sekolah" subtitle="Seluruh guru dan staf ditampilkan per orang agar peran setiap anggota tim mudah dikenali."/>

@@ -105,7 +105,7 @@ class FirestoreRuntimeStoreTest extends TestCase
         $this->assertSame('0',$session->read($id));
         $this->travel(121)->seconds();
         $this->assertSame('',$another->read($id));
-        $this->assertSame(1,$session->gc(120));
+        $this->assertSame(2,$session->gc(120)); // One Firestore record and its local fallback.
         $this->assertSame(0,$this->documents->count('runtime_sessions'));
         $this->assertFalse($session->write('../admins/owner','invalid'));
         $this->assertSame('',$session->read('../admins/owner'));

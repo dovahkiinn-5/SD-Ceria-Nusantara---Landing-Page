@@ -17,7 +17,9 @@ return [
     'home' => [
         'eyebrow' => 'TUMBUH CERIA SETIAP HARI', 'title' => "Belajar Ceria,\nTumbuh Percaya Diri",
         'description' => 'Ruang belajar yang hangat untuk anak mengeksplorasi, bertanya, dan menemukan potensi terbaiknya.',
+        'campus_image' => '/assets/design/sd-ceria-nusantara-campus.png',
         'image' => '/assets/design/asset-03.png',
+        'classroom_image' => '/assets/design/asset-04.png',
         'tablet_description' => 'Ruang belajar yang hangat untuk anak mengeksplorasi dan menemukan potensinya.',
         'tablet' => [
             'profile_text'=>'Kami percaya setiap anak punya cara unik untuk belajar. Guru dan keluarga berjalan searah untuk mendampingi pertumbuhannya.',

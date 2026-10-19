@@ -13,7 +13,7 @@ class FirestoreSessionHandler implements SessionHandlerInterface
 
     public function __construct(private FirestoreDocumentStore $documents, private int $minutes, private string $namespace)
     {
-        $path = storage_path('framework/sessions');
+        $path = config('session.files', storage_path('framework/sessions'));
         if (! is_dir($path)) @mkdir($path, 0775, true);
         $this->fallback = new FileSessionHandler(new Filesystem, $path, $minutes);
     }

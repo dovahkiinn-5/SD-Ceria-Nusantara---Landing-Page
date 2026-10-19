@@ -60,7 +60,7 @@ class AdminController extends Controller
         abort_unless(in_array($collection, ['applications','visits']), 404);
         $record = $store->get($collection, $id);
         abort_unless($record, 404);
-        $statuses = $collection === 'applications' ? ['baru','ditinjau','diterima','ditolak'] : ['baru','dikonfirmasi','selesai','dibatalkan'];
+        $statuses = $collection === 'applications' ? ['baru','ditinjau','perlu_perbaikan','diterima','ditolak'] : ['baru','dikonfirmasi','selesai','dibatalkan'];
         $data = $request->validate(['status'=>['required',Rule::in($statuses)],'admin_notes'=>'nullable|string|max:5000']);
         $record['status'] = $data['status'];
         $record['admin_notes'] = $data['admin_notes'];
@@ -76,7 +76,7 @@ class AdminController extends Controller
         $record = $store->get($collection, $id);
         abort_unless($record, 404);
         foreach ($record['documents'] ?? [] as $file) $storage->delete($file['path']);
-        if (! empty($record['payment']['proof']['path'])) $storage->delete($record['payment']['proof']['path']);
+        if (! empty($record['payment']['proof']['path']) && ! in_array($record['payment']['proof']['path'], array_column($record['documents'] ?? [], 'path'), true)) $storage->delete($record['payment']['proof']['path']);
         $store->delete($collection, $id);
         return redirect()->route('admin.records',$collection)->with('status','Data dan berkas berhasil dihapus.');
     }
@@ -85,7 +85,7 @@ class AdminController extends Controller
         abort_unless(in_array($field,['birth_certificate','family_card','child_identity_card','photo','payment_proof']),404);
         $record = $store->get('applications',$id);
         $file = $field === 'payment_proof'
-            ? ($record['payment']['proof'] ?? null)
+            ? ($record['documents']['payment_proof'] ?? $record['payment']['proof'] ?? null)
             : ($record['documents'][$field] ?? null);
         $download = $file ? $storage->get($file['path']) : null;
         abort_unless($download,404);

@@ -7,7 +7,7 @@ use RuntimeException;
 
 class FirestoreFileStorage
 {
-    private const MAX_FILE_SIZE = 1024 * 1024;
+    private const MAX_FILE_SIZE = 5 * 1024 * 1024;
     private const CHUNK_SIZE = 512 * 1024;
     private const FILES = 'uploaded_files';
     private const CHUNKS = 'uploaded_file_chunks';
@@ -18,7 +18,7 @@ class FirestoreFileStorage
     {
         $size = $file->getSize();
         if (! is_int($size) || $size < 1 || $size > self::MAX_FILE_SIZE) {
-            throw new RuntimeException('Ukuran berkas maksimum 1 MB.');
+            throw new RuntimeException('Ukuran berkas maksimum 5 MB.');
         }
 
         $contents = file_get_contents($file->getRealPath());
@@ -36,7 +36,7 @@ class FirestoreFileStorage
         $size = strlen($contents);
 
         if ($size < 1 || $size > self::MAX_FILE_SIZE) {
-            throw new RuntimeException('Ukuran berkas maksimum 1 MB.');
+            throw new RuntimeException('Ukuran berkas maksimum 5 MB.');
         }
 
         $fileId = hash('sha256', $path);
@@ -103,7 +103,7 @@ class FirestoreFileStorage
         $size = $metadata['size'] ?? null;
         $chunkCount = $metadata['chunk_count'] ?? null;
         if (($metadata['path'] ?? null) !== $path || ! is_int($size) || $size < 1 || $size > self::MAX_FILE_SIZE
-            || ! is_int($chunkCount) || $chunkCount < 1 || $chunkCount > 2) {
+            || ! is_int($chunkCount) || $chunkCount < 1 || $chunkCount > 10) {
             throw new RuntimeException('Metadata berkas Firestore tidak valid.');
         }
         if (! is_string($metadata['content_type'] ?? null)) {
@@ -142,7 +142,7 @@ class FirestoreFileStorage
         }
 
         $chunkCount = $metadata['chunk_count'] ?? null;
-        if (! is_int($chunkCount) || $chunkCount < 1 || $chunkCount > 2) {
+        if (! is_int($chunkCount) || $chunkCount < 1 || $chunkCount > 10) {
             throw new RuntimeException('Metadata berkas Firestore tidak valid.');
         }
 

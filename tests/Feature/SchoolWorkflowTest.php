@@ -89,8 +89,8 @@ class SchoolWorkflowTest extends TestCase
         $this->assertSame(0,app(DocumentStore::class)->count('applications'));
         $this->get('/pendaftaran/4')->assertOk()->assertSee('Anak Uji')->assertSee('wali@example.test');
         $this->post('/pendaftaran/kirim',[])->assertSessionHasErrors('consent');
-        $this->post('/pendaftaran/kirim',['consent'=>'1'])->assertRedirect('/pendaftaran/berhasil');
-        $this->post('/pendaftaran/kirim',['consent'=>'1'])->assertRedirect('/pendaftaran/berhasil');
+        $this->post('/pendaftaran/kirim',['consent'=>'1', 'payment_method'=>'offline'])->assertRedirect('/pendaftaran/berhasil');
+        $this->post('/pendaftaran/kirim',['consent'=>'1', 'payment_method'=>'offline'])->assertRedirect('/pendaftaran/berhasil');
         $store=app(DocumentStore::class);
         $this->assertSame(1,$store->count('applications'));
         $record=$store->get('applications',$reference);
@@ -195,7 +195,7 @@ class SchoolWorkflowTest extends TestCase
         $base=['name'=>'Wali Uji','email'=>'wali@example.test','phone'=>'081234567890','date'=>now()->next('Monday')->toDateString()];
         $this->post('/kunjungan',$base)->assertSessionHasErrors('consent');
         $this->post('/kunjungan',array_merge($base,['consent'=>'1','date'=>now()->next('Sunday')->toDateString()]))->assertSessionHasErrors('date');
-        $this->post('/kunjungan',$base+['consent'=>'1'])->assertRedirect('/kunjungan/berhasil');
+        $this->post('/kunjungan',$base+['consent'=>'1', 'payment_method'=>'offline'])->assertRedirect('/kunjungan/berhasil');
         $this->get('/kunjungan/berhasil')->assertOk()->assertSee('Permintaan kunjungan diterima');
         $this->assertSame(1,app(DocumentStore::class)->count('visits'));
     }

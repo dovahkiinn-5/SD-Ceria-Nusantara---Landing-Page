@@ -57,6 +57,9 @@ Artisan::command('school:admin-reset-password {email}', function (DocumentStore 
 Artisan::command('school:firebase-check', function () {
     if (config('school.store') !== 'firestore') { $this->error('Atur SCHOOL_STORE=firestore terlebih dahulu.'); return 1; }
     try {
+        // A missing document and a missing database both return 404 on document reads.
+        // Probe the collection first so an absent database is never reported as healthy.
+        app(\App\Services\FirestoreDocumentStore::class)->page('content', null, 1);
         // Probe the same document-read path used by the public landing pages.
         $documents = app(DocumentStore::class)->getMany('content', ['home', 'settings', 'teachers']);
         $found = count(array_filter($documents));

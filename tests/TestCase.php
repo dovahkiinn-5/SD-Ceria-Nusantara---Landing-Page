@@ -12,6 +12,8 @@ abstract class TestCase extends BaseTestCase
         // Avoid competing with the running site's Blade cache on Windows.
         $compiled = storage_path('framework/testing/views');
         if (! is_dir($compiled)) mkdir($compiled, 0775, true);
-        config(['view.compiled' => $compiled]);
+        config(['view.compiled' => $compiled, 'cache.stores.file' => ['driver' => 'array'], 'session.files' => storage_path('framework/testing/sessions/'.uniqid('test-', true))]);
+        \Illuminate\Support\Facades\Cache::purge('file');
+        \Illuminate\Support\Facades\Http::preventStrayRequests();
     }
 }

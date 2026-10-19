@@ -115,8 +115,9 @@ class SchoolContent
     public function save(string $section, array $data): void
     {
         if ($section === 'teachers') {
-            $data = TeacherDirectory::withDefaults($data);
+            $data = self::mergeDefaults($this->defaults()['teachers'], $data);
             TeacherDirectory::validate($data);
+            $data = TeacherDirectory::withDefaults($data);
         }
         if ($section === 'home') unset($data['principal_name']);
         $this->store->put('content', $section, $data);

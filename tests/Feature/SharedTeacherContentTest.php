@@ -14,6 +14,20 @@ class SharedTeacherContentTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_all_three_home_slides_read_published_dashboard_fields(): void
+    {
+        $content = app(SchoolContent::class);
+        $home = $content->defaults()['home'];
+        foreach (['campus_image', 'image', 'classroom_image'] as $field) $home[$field] = '/media/updated-'.$field.'.jpg';
+        $content->save('home', $home);
+        $response = $this->get('/')->assertOk();
+        $this->assertSame(3, substr_count($response->getContent(), 'class="hero-slide '));
+        foreach (['campus_image', 'image', 'classroom_image'] as $field) $response->assertSee($home[$field], false);
+        $response->assertDontSee('src="/assets/design/sd-ceria-nusantara-campus.png"', false);
+    }
+
+
+
     public function test_published_shared_directory_updates_public_cards_organization_subjects_and_hero(): void
     {
         $content = app(SchoolContent::class);
@@ -42,6 +56,7 @@ class SharedTeacherContentTest extends TestCase
         $teachers = TeacherDirectory::defaults();
         $teachers['people'] = [array_replace($teachers['people'][0], ['name'=>'Satu profil saja'])];
         $teachers['structure'] = ['head'=>0,'branches'=>[]];
+        $teachers['featured_people'] = [0];
         $teachers['subjects'] = [];
         $content->save('teachers', $teachers);
         $this->get('/guru-staf')->assertOk()->assertSee('Satu profil saja')->assertDontSee('Arif Pranata');

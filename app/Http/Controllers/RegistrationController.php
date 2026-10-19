@@ -110,6 +110,7 @@ class RegistrationController extends Controller
                     'path' => $path,
                     'name' => $file->getClientOriginalName(),
                     'size' => $file->getSize(),
+                    'mime' => $file->getMimeType(),
                 ];
             }
         }
@@ -140,13 +141,24 @@ class RegistrationController extends Controller
             }
         }
 
+        // A retried request must never replace or delete files of an accepted submission.
+        $existing = $store->get('applications', $draft['reference']);
+        if ($existing) {
+            abort_unless(hash_equals($existing['submission_hash'] ?? '', hash('sha256', $draft['token'])), 409);
+            $request->session()->put('registration_success', $draft['reference']);
+            $request->session()->forget('registration');
+            return redirect()->route('registration.success');
+        }
+        $settings = array_replace(app(SchoolContent::class)->defaults()['settings'], $store->get('content', 'settings') ?? []);
+        $amount = (int) preg_replace('/[^0-9]/', '', (string) ($settings['fee'] ?? '0'));
+        abort_if($amount < 1, 422, 'Biaya pendaftaran belum tersedia. Hubungi panitia.');
         $paymentData = $request->validate([
             'payment_method' => ['required', Rule::in(['offline', 'transfer'])],
             'payment_proof' => [
                 Rule::requiredIf(fn () => $request->input('payment_method') === 'transfer'
                     && (empty($draft['payment']['proof']['path'])
                         || ! $storage->exists($draft['payment']['proof']['path']))),
-                'nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024',
+                'nullable', 'prohibited_if:payment_method,offline', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120',
             ],
             'consent' => 'accepted',
         ]);
@@ -164,10 +176,11 @@ class RegistrationController extends Controller
                     'path' => $path,
                     'name' => $proof->getClientOriginalName(),
                     'size' => $proof->getSize(),
+                    'mime' => $proof->getMimeType(),
                 ];
             }
             $draft['payment'] = [
-                'method' => 'transfer', 'amount' => 250000, 'status' => 'menunggu_verifikasi',
+                'method' => 'transfer', 'amount' => $amount, 'status' => 'menunggu_verifikasi',
                 'bank' => 'BCA', 'account_number' => '8535459831',
                 'account_name' => 'Muhamad Azmer Fahrezi', 'proof' => $previousProof,
             ];
@@ -175,15 +188,20 @@ class RegistrationController extends Controller
             if ($previousProof && ! empty($previousProof['path'])) {
                 $storage->delete($previousProof['path']);
             }
-            $draft['payment'] = ['method' => 'offline', 'amount' => 250000, 'status' => 'belum_dibayar'];
+            $draft['payment'] = ['method' => 'offline', 'amount' => $amount, 'status' => 'belum_dibayar'];
         }
 
+        if ($paymentMethod === 'transfer') {
+            $draft['documents']['payment_proof'] = $previousProof;
+        } else {
+            unset($draft['documents']['payment_proof']);
+        }
         $request->session()->put('registration', $draft);
 
         $record = [
             'reference' => $draft['reference'], 'submission_hash' => hash('sha256', $draft['token']),
             'child' => $draft['child'], 'parent' => $draft['parent'], 'documents' => $draft['documents'],
-            'payment' => $draft['payment'],
+            'payment_method' => $paymentMethod, 'payment' => $draft['payment'],
             'status' => 'baru', 'notes' => '', 'consent_at' => now()->toIso8601String(),
             'created_at' => now()->toIso8601String(),
         ];

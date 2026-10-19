@@ -35,13 +35,13 @@ class FirebaseCommandTest extends TestCase
 
     public function test_connection_check_accepts_an_empty_collection_without_writing(): void
     {
-        Http::fake(['*' => Http::response([])]);
+        Http::fake(['*/documents/content?*' => Http::response([]), '*' => Http::response([], 404)]);
 
         $this->artisan('school:firebase-check')
             ->expectsOutputToContain('Koneksi dan autentikasi Firestore berhasil.')
             ->assertSuccessful();
 
-        Http::assertSentCount(1);
+        Http::assertSentCount(4);
         Http::assertSent(fn ($request) => $request->method() === 'GET'
             && str_contains($request->url(), '/documents/content?')
             && $request['pageSize'] === 1);

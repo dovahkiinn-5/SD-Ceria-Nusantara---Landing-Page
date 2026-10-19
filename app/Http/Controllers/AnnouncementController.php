@@ -52,9 +52,9 @@ class AnnouncementController extends Controller
             'diterima' => [
                 'status' => 'diterima',
                 'tone' => 'accepted',
-                'label' => 'LULUS',
-                'title' => 'Selamat, kamu diterima!',
-                'message' => 'Calon peserta didik dinyatakan lulus seleksi penerimaan SD Ceria Nusantara.',
+                'label' => 'LULUS ADMINISTRASI',
+                'title' => 'Selamat, kamu lolos administrasi!',
+                'message' => 'Calon peserta didik lolos pemeriksaan administrasi. Silakan lanjutkan daftar ulang dan pemeriksaan dokumen di sekolah sebelum aktivasi siswa.',
             ],
             'ditolak' => [
                 'status' => 'ditolak',
@@ -62,6 +62,11 @@ class AnnouncementController extends Controller
                 'label' => 'TIDAK LULUS',
                 'title' => 'Terima kasih sudah mengikuti seleksi',
                 'message' => 'Calon peserta didik belum dinyatakan lulus pada periode penerimaan ini.',
+            ],
+            'perlu_perbaikan' => [
+                'status' => 'perlu_perbaikan', 'tone' => 'pending',
+                'label' => 'PERLU PERBAIKAN', 'title' => 'Lengkapi berkas pendaftaran',
+                'message' => (string) ($record['admin_notes'] ?? 'Hubungi panitia untuk melengkapi berkas.'),
             ],
             default => [
                 'status' => 'diproses',

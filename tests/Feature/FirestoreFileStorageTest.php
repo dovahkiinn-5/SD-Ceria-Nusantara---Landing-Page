@@ -53,10 +53,10 @@ class FirestoreFileStorageTest extends TestCase
         $storage = new FirestoreFileStorage($documents);
 
         try {
-            $storage->put('applications/file.pdf', str_repeat('x', 1024 * 1024 + 1));
+            $storage->put('applications/file.pdf', str_repeat('x', 5 * 1024 * 1024 + 1));
             $this->fail('Oversized files must be rejected.');
         } catch (RuntimeException $exception) {
-            $this->assertStringContainsString('maksimum 1 MB', $exception->getMessage());
+            $this->assertStringContainsString('maksimum 5 MB', $exception->getMessage());
         }
 
         $this->expectException(\InvalidArgumentException::class);

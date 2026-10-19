@@ -160,7 +160,7 @@
 <section class="review-block"><h3>Dokumen</h3><a href="{{ route('registration',3) }}">Ubah</a><p>4 berkas sudah diunggah dan siap dikirim</p>@foreach($documentFields as $field=>$document)@if(isset($draft['documents'][$field]))<p><span aria-hidden="true">✓</span> {{ $document['label'] }}: {{ $draft['documents'][$field]['name'] }}</p>@endif @endforeach</section>
 <section class="review-block payment-choice" data-payment-choice>
     <h3>Pembayaran pendaftaran</h3>
-    <p>Biaya pendaftaran <strong>Rp250.000</strong>. Pilih cara pembayaran yang akan digunakan.</p>
+    <p>Biaya pendaftaran <strong>Rp{{ number_format((int) preg_replace('/[^0-9]/', '', (string) $site['settings']['fee']), 0, ',', '.') }}</strong>. Pilih cara pembayaran yang akan digunakan.</p>
     <label class="payment-option">
         <input type="radio" name="payment_method" value="offline" required @checked(old('payment_method', $draft['payment']['method'] ?? '') === 'offline')>
         <span><strong>Bayar langsung di sekolah</strong><small>Pembayaran dilakukan kepada petugas sekolah.</small></span>
@@ -170,10 +170,10 @@
         <span><strong>Transfer bank BCA</strong><small>Rekening 8535459831 · a.n. Muhamad Azmer Fahrezi</small></span>
     </label>
     <div class="payment-proof-panel" data-payment-proof-panel @if(old('payment_method', $draft['payment']['method'] ?? '') !== 'transfer') hidden @endif>
-        <p>Transfer tepat <strong>Rp250.000</strong>, lalu unggah foto atau tangkapan layar bukti pembayaran (JPG, PNG, atau WEBP; maks. 1 MB).</p>
+        <p>Transfer tepat <strong>Rp{{ number_format((int) preg_replace('/[^0-9]/', '', (string) $site['settings']['fee']), 0, ',', '.') }}</strong>, lalu unggah bukti pembayaran (PDF, JPG, PNG, atau WEBP; maks. 5 MB).</p>
         @if(!empty($draft['payment']['proof']['name']))<p class="upload-current">Bukti tersimpan: {{ $draft['payment']['proof']['name'] }}. Pilih file baru jika ingin mengganti.</p>@endif
         <label class="registration-field"><span class="field-label-row"><span>Bukti pembayaran transfer <b>*</b></span></span>
-            <input type="file" name="payment_proof" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" @required(old('payment_method', $draft['payment']['method'] ?? '') === 'transfer' && empty($draft['payment']['proof']['path']))>
+            <input type="file" name="payment_proof" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" @required(old('payment_method', $draft['payment']['method'] ?? '') === 'transfer' && empty($draft['payment']['proof']['path']))>
         </label>
         @error('payment_proof')<p class="field-error">{{ $message }}</p>@enderror
     </div>
@@ -192,6 +192,7 @@
             const transfer = section.querySelector('input[name="payment_method"]:checked')?.value === 'transfer';
             panel.hidden = !transfer;
             proof.required = transfer && !hasSavedProof;
+            proof.disabled = !transfer;
         };
         radios.forEach(radio => radio.addEventListener('change', update));
         update();

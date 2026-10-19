@@ -75,11 +75,11 @@ class TeacherDirectory
             $saved['people'] = $defaults['people'];
         } else {
             foreach ($saved['people'] as $index => $person) {
-                if (! is_array($person) || ! isset($defaults['people'][$index])) {
+                if (! is_array($person)) {
                     unset($saved['people'][$index]);
                     continue;
                 }
-                $saved['people'][$index] = array_replace($defaults['people'][$index], $person);
+                $saved['people'][$index] = array_replace($defaults['people'][$index] ?? $defaults['people'][0], $person);
             }
             if ($saved['people'] === []) $saved['people'] = $defaults['people'];
         }
@@ -123,16 +123,7 @@ class TeacherDirectory
 
     private static function merge(array $defaults, array $saved): array
     {
-        if (array_is_list($defaults)) {
-            if ($saved === []) return [];
-            $merged = $defaults;
-            foreach ($saved as $index => $value) {
-                $merged[$index] = isset($defaults[$index]) && is_array($defaults[$index]) && is_array($value)
-                    ? self::merge($defaults[$index], $value)
-                    : $value;
-            }
-            return $merged;
-        }
+        if (array_is_list($defaults)) return array_values($saved);
 
         foreach ($saved as $key => $value) {
             $defaults[$key] = isset($defaults[$key]) && is_array($defaults[$key]) && is_array($value)
@@ -193,7 +184,8 @@ class TeacherDirectory
 
     private static function normalizeSubjects(mixed $subjects, array $fallback): array
     {
-        if (! is_array($subjects) || $subjects === []) return $fallback;
+        if (! is_array($subjects)) return $fallback;
+        if ($subjects === []) return [];
         $normalized = [];
         foreach ($subjects as $index => $subject) {
             if (! is_array($subject)) continue;

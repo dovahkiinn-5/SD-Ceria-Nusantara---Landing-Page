@@ -21,11 +21,12 @@
 <a class="skip-link" href="#main">Lewati ke konten</a>
 <header class="site-header">
     <div class="header-inner">
-        <a class="brand" href="{{ route('home') }}" aria-label="SD Ceria Nusantara, beranda">
+        <a class="brand" href="{{ route('home') }}" aria-label="{{ $site['settings']['school_name'] }}, beranda">
             <span class="brand-emblem" aria-hidden="true">
                 <img src="{{ $site['settings']['logo'] }}" alt="" width="62" height="62">
             </span>
-            <span>SD CERIA<small>NUSANTARA</small></span>
+            @php($brandWords = preg_split('/\s+/', trim($site['settings']['school_name'])))
+            <span>{{ implode(' ', array_slice($brandWords, 0, 2)) }}@if(count($brandWords)>2)<small>{{ implode(' ', array_slice($brandWords, 2)) }}</small>@endif</span>
         </a>
         <nav id="navigation" aria-label="Navigasi utama">
             @foreach(['home'=>'Beranda','about'=>'Tentang Kami','program'=>'Program','facilities'=>'Fasilitas','teachers'=>'Guru & Staf','gallery'=>'Galeri','contact'=>'Kontak','announcement'=>'Pengumuman'] as $key=>$label)
@@ -45,7 +46,7 @@
     @unless(isset($hideCta))
     <section class="cta outer {{ ($page ?? '') === 'home' ? 'home-cta' : '' }}">
         <div>@if(($page ?? '') === 'home')<p class="eyebrow">SIAP BERKENALAN DENGAN KAMI?</p>@endif
-        <h2>{{ ($page ?? '') === 'home' ? 'Mari mulai langkah pertama bersama.' : 'Siap mengenal SD Ceria Nusantara lebih dekat?' }}</h2>
+        <h2>{{ ($page ?? '') === 'home' ? 'Mari mulai langkah pertama bersama.' : 'Siap mengenal '.$site['settings']['school_name'].' lebih dekat?' }}</h2>
         <p>{{ ($page ?? '') === 'home' ? 'Daftar secara online atau jadwalkan kunjungan ke sekolah.' : 'Hubungi kami atau mulai proses pendaftaran online.' }}</p></div>
         <div class="cta-actions"><a class="button" href="{{ route('registration', 1) }}">Daftar Sekarang</a>
         @if(($page ?? '') === 'home')<a class="button outline" href="{{ route('contact') }}#kunjungan">Jadwalkan Kunjungan</a>@endif</div>
@@ -53,9 +54,9 @@
     @endunless
 </main>
 <footer class="site-footer"><div class="container footer-inner">
-    <div class="footer-brand"><img src="{{ $site['settings']['logo'] }}" width="58" height="58" alt=""><div><strong>SD CERIA NUSANTARA</strong><p>{{ $site['settings']['tagline'] }}</p></div></div>
+    <div class="footer-brand"><img src="{{ $site['settings']['logo'] }}" width="58" height="58" alt=""><div><strong>{{ $site['settings']['school_name'] }}</strong><p>{{ $site['settings']['tagline'] }}</p></div></div>
     <div class="footer-contact"><p><a href="mailto:{{ $site['settings']['email'] }}">{{ $site['settings']['email'] }}</a> • <a href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener">WA {{ $site['settings']['whatsapp'] }}</a></p><p>{{ $site['settings']['address'] }}</p><p>{{ $site['settings']['hours'] }}</p></div>
-    @if(($page ?? '') === 'home')<div class="footer-bottom"><span>© {{ date('Y') }} SD Ceria Nusantara. Hak cipta dilindungi.</span><span><a href="{{ route('privacy') }}">Privasi</a> • <a href="{{ route('terms') }}">Syarat & Ketentuan</a></span></div>@endif
+    @if(($page ?? '') === 'home')<div class="footer-bottom"><span>© {{ date('Y') }} {{ $site['settings']['school_name'] }}. Hak cipta dilindungi.</span><span><a href="{{ route('privacy') }}">Privasi</a> • <a href="{{ route('terms') }}">Syarat & Ketentuan</a></span></div>@endif
 </div></footer>
 <a class="whatsapp-float" data-whatsapp-float href="https://wa.me/{{ preg_replace('/\D/', '', $site['settings']['whatsapp']) }}" target="_blank" rel="noopener" aria-label="Tanya via WhatsApp" title="Tanya via WhatsApp">
     <img src="/assets/design/whatsapp.svg" alt="" width="38" height="38">
