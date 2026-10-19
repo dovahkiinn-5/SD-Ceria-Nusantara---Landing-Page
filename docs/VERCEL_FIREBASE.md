@@ -2,7 +2,7 @@
 
 Deployment produksi memakai Firestore untuk data halaman, akun admin, pendaftar, session, cache, serta isi berkas. Tidak perlu Firebase Storage, paket Blaze, bucket, atau storage server persisten.
 
-Vercel menjalankan Laravel melalui community runtime `vercel-php@0.7.4` (PHP 8.3) di region Singapore (`sin1`). Runtime PHP ini dikelola komunitas, bukan runtime PHP resmi dari Vercel.
+Vercel menjalankan Laravel melalui community runtime `vercel-php@0.7.4` (PHP 8.3) di region Singapore (`sin1`). Runtime PHP ini dikelola komunitas, bukan runtime PHP resmi dari Vercel. Gunakan Node.js **22.x**, sesuai dukungan runtime PHP; versi ini ditetapkan melalui `engines.node` di `package.json`.
 
 ## 1. Penyimpanan berkas di Firestore
 
@@ -73,7 +73,7 @@ Jangan mengatur `FIREBASE_CREDENTIALS` ke path file Windows pada Vercel. Jangan 
 
 2. Push proyek ke repository Git pribadi. Pastikan `git status` tidak menampilkan `.env` atau file service account.
 3. Di Vercel pilih **Add New → Project**, lalu impor repository.
-4. Pilih **Framework Preset: Other**. `vercel.json` juga menetapkan preset `other` agar Vercel tidak menganggap aplikasi Laravel ini sebagai Vite dan mencari folder `dist`.
+4. Pilih **Framework Preset: Other**. `vercel.json` menetapkan `"framework": null` agar Vercel tidak menganggap aplikasi Laravel ini sebagai Vite dan mencari folder `dist`. Nilai string `"other"` tidak valid dalam schema Vercel dan membuat deployment ditolak sebelum build.
 5. Pada **Settings → Build and Deployment**, hapus nilai `dist` dari **Output Directory** (matikan override bila aktif) dan kosongkan **Build Command**. Jangan set output ke `dist` atau `public`; `vercel.json` mengatur rute serverless dan aset aplikasi.
 6. Masukkan semua environment variables pada langkah 4.
 7. Jalankan deployment.
