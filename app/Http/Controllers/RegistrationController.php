@@ -42,6 +42,7 @@ class RegistrationController extends Controller
 
         return view('registration.form', [
             'step' => $step, 'draft' => $draft, 'site' => $content->all(), 'page' => 'registration',
+            'regions' => $step === 2 ? $this->regions() : [],
         ]);
     }
 
@@ -61,38 +62,32 @@ class RegistrationController extends Controller
                 'previous_school' => 'nullable|string|max:180', 'support_needs' => 'nullable|string|max:1000',
             ]);
         } elseif ($step === 2) {
+            $regions = $this->regions();
             $parent = $request->validate([
                 'parent_name' => 'required|string|max:120', 'relationship' => ['required', Rule::in(['Ayah', 'Ibu', 'Wali'])],
                 'phone' => ['required', 'string', 'regex:/^\+?[0-9 ()-]{9,25}$/'], 'email' => 'required|email|max:190',
-                'address' => 'nullable|string|max:1000', 'emergency_contact' => ['nullable', 'string', 'regex:/^\+?[0-9 ()-]{9,25}$/'],
-                'domicile_latitude' => 'nullable|required_with:domicile_longitude|numeric|between:-90,90',
-                'domicile_longitude' => 'nullable|required_with:domicile_latitude|numeric|between:-180,180',
+                'province_code' => ['required', Rule::in(array_keys($regions))],
+                'regency_code' => ['required', Rule::in(array_keys($regions[$request->input('province_code')]['regencies'] ?? []))],
+                'district' => 'required|string|max:120', 'village' => 'required|string|max:120',
+                'address' => 'required|string|max:1000', 'postal_code' => ['nullable', 'regex:/^[0-9]{5}$/'],
+                'emergency_contact' => ['nullable', 'string', 'regex:/^\+?[0-9 ()-]{9,25}$/'],
             ]);
 
-            if (isset($parent['domicile_latitude'], $parent['domicile_longitude'])) {
-                $parent['domicile_latitude'] = (float) $parent['domicile_latitude'];
-                $parent['domicile_longitude'] = (float) $parent['domicile_longitude'];
-                $parent['domicile_distance_km'] = $this->distanceInKm(
-                    $parent['domicile_latitude'],
-                    $parent['domicile_longitude'],
-                    (float) config('school.latitude'),
-                    (float) config('school.longitude'),
-                );
-            } else {
-                unset($parent['domicile_latitude'], $parent['domicile_longitude']);
-            }
-
+            $parent['province'] = $regions[$parent['province_code']]['name'];
+            $parent['regency'] = $regions[$parent['province_code']]['regencies'][$parent['regency_code']];
             $draft['parent'] = $parent;
         } else {
             $rules = [];
+            $messages = [];
             foreach (self::DOCUMENT_FIELDS as $field) {
                 $rules[$field] = [
                     isset($draft['documents'][$field]) ? 'nullable' : 'required',
                     'file', 'max:1024',
                     $field === 'photo' ? 'mimes:jpg,jpeg,png' : 'mimes:jpg,jpeg,png,pdf',
                 ];
+                $messages[$field.'.max'] = 'Ukuran :attribute melebihi 1 MB. Pilih berkas yang lebih kecil.';
             }
-            $request->validate($rules);
+            $request->validate($rules, $messages);
 
             foreach (array_keys($rules) as $field) {
                 if (! $file = $request->file($field)) {
@@ -132,6 +127,13 @@ class RegistrationController extends Controller
             return redirect()->route('registration', $draft['completed'] + 1);
         }
 
+        // Drafts created before the address became mandatory must be completed first.
+        foreach (['province_code', 'regency_code', 'district', 'village', 'address'] as $field) {
+            if (blank($draft['parent'][$field] ?? null)) {
+                return redirect()->route('registration', 2);
+            }
+        }
+
         foreach (self::DOCUMENT_FIELDS as $field) {
             $file = $draft['documents'][$field] ?? null;
             if (! $file || empty($file['path']) || ! $storage->exists($file['path'])) {
@@ -161,6 +163,9 @@ class RegistrationController extends Controller
                 'nullable', 'prohibited_if:payment_method,offline', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120',
             ],
             'consent' => 'accepted',
+        ], [
+            'payment_proof.max' => 'Ukuran bukti pembayaran melebihi 5 MB. Pilih berkas yang lebih kecil.',
+            'payment_proof.mimes' => 'Bukti pembayaran harus berupa PDF, JPG, PNG, atau WEBP.',
         ]);
 
         $paymentMethod = $paymentData['payment_method'];
@@ -233,16 +238,10 @@ class RegistrationController extends Controller
         ]);
     }
 
-    private function distanceInKm(float $fromLatitude, float $fromLongitude, float $toLatitude, float $toLongitude): float
+    private function regions(): array
     {
-        $latitudeDelta = deg2rad($toLatitude - $fromLatitude);
-        $longitudeDelta = deg2rad($toLongitude - $fromLongitude);
-        $fromLatitude = deg2rad($fromLatitude);
-        $toLatitude = deg2rad($toLatitude);
+        static $regions;
 
-        $haversine = sin($latitudeDelta / 2) ** 2
-            + cos($fromLatitude) * cos($toLatitude) * sin($longitudeDelta / 2) ** 2;
-
-        return round(6371.0088 * 2 * atan2(sqrt($haversine), sqrt(1 - $haversine)), 2);
+        return $regions ??= json_decode(file_get_contents(resource_path('data/indonesia-regions.json')), true, 512, JSON_THROW_ON_ERROR);
     }
 }

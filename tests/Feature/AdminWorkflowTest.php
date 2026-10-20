@@ -72,7 +72,7 @@ class AdminWorkflowTest extends TestCase
         $storage->put('applications/test/photo.png','test-image','image/png');
         $storage->put('applications/test/kia.pdf','test-kia','application/pdf');
         $store=app(DocumentStore::class);
-        $store->put('applications','CN-TEST',['reference'=>'CN-TEST','child'=>['child_name'=>'=DANGEROUS()','birth_date'=>'2019-01-01'],'parent'=>['parent_name'=>'Wali','phone'=>'+628123456789','email'=>'wali@example.test','address'=>'Alamat uji CSV','domicile_distance_km'=>0.0],'created_at'=>now()->toIso8601String(),'status'=>'baru','documents'=>['photo'=>['path'=>'applications/test/photo.png','name'=>'foto.png'],'child_identity_card'=>['path'=>'applications/test/kia.pdf','name'=>'kia.pdf']]]);
+        $store->put('applications','CN-TEST',['reference'=>'CN-TEST','child'=>['child_name'=>'=DANGEROUS()','birth_date'=>'2019-01-01'],'parent'=>['parent_name'=>'Wali','phone'=>'+628123456789','email'=>'wali@example.test','address'=>'Alamat uji CSV','province_code'=>'19','province'=>'Kepulauan Bangka Belitung','regency_code'=>'19.71','regency'=>'Kota Pangkal Pinang','district'=>'Gerunggang','village'=>'Kacang Pedang','domicile_distance_km'=>0.0],'created_at'=>now()->toIso8601String(),'status'=>'baru','documents'=>['photo'=>['path'=>'applications/test/photo.png','name'=>'foto.png'],'child_identity_card'=>['path'=>'applications/test/kia.pdf','name'=>'kia.pdf']]]);
         $this->login();
         $this->get('/admin/data/applications/CN-TEST')->assertOk();
         $this->patch('/admin/data/applications/CN-TEST',['status'=>'diterima','admin_notes'=>'Lengkap'])->assertRedirect();
@@ -86,9 +86,11 @@ class AdminWorkflowTest extends TestCase
         $headers=str_getcsv(ltrim($rows[0],"\xEF\xBB\xBF"));
         $data=str_getcsv($rows[1]);
         $this->assertSame('Alamat domisili',$headers[6]);
-        $this->assertSame('Jarak ke sekolah (km)',$headers[7]);
+        $this->assertSame('Provinsi',$headers[7]);
         $this->assertSame('Alamat uji CSV',$data[6]);
-        $this->assertSame('0',$data[7]);
+        $this->assertSame('Kepulauan Bangka Belitung',$data[7]);
+        $this->assertSame('19.71',$data[10]);
+        $this->assertStringNotContainsString('Jarak ke sekolah',$csv);
         $this->delete('/admin/data/applications/CN-TEST')->assertRedirect('/admin/data/applications');
         $this->assertNull($store->get('applications','CN-TEST'));
         $this->assertFalse($storage->exists('applications/test/photo.png'));

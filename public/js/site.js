@@ -54,6 +54,9 @@ document.querySelectorAll('form[data-single-submit]').forEach(form => form.addEv
 document.querySelectorAll('[data-upload]').forEach(dropzone => {
     const input = dropzone.querySelector('input[type=file]');
     const fileName = dropzone.querySelector('[data-upload-name]');
+    const feedback = dropzone.parentElement?.querySelector('[data-upload-error]');
+    const maxSize = Number(dropzone.dataset.maxSize || 0);
+    const allowedExtensions = (input?.accept || '').split(',').map(value => value.trim().toLowerCase()).filter(value => value.startsWith('.'));
     const preview = dropzone.querySelector('[data-upload-preview]');
     const previewImage = dropzone.querySelector('[data-upload-preview-image]');
     const previewDocument = dropzone.querySelector('[data-upload-preview-document]');
@@ -63,6 +66,7 @@ document.querySelectorAll('[data-upload]').forEach(dropzone => {
 
     const formatFileSize = bytes => {
         if (bytes < 1024) return `${bytes} B`;
+        if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toLocaleString('id-ID', { maximumFractionDigits: 1 })} MB`;
         return `${(bytes / 1024).toLocaleString('id-ID', { maximumFractionDigits: 1 })} KB`;
     };
     const clearPreviewUrl = () => {
@@ -99,7 +103,30 @@ document.querySelectorAll('[data-upload]').forEach(dropzone => {
         if (previewMeta) previewMeta.textContent = `${file.name} • ${formatFileSize(file.size)}`;
     };
 
-    input?.addEventListener('change', () => renderFile(input.files?.[0]));
+    input?.addEventListener('change', () => {
+        const file = input.files?.[0];
+        let message = '';
+        if (file && allowedExtensions.length && !allowedExtensions.some(extension => file.name.toLowerCase().endsWith(extension))) {
+            message = `Format berkas belum sesuai. Pilih ${dropzone.dataset.formats || 'format yang tertera'}.`;
+        } else if (file && maxSize && file.size > maxSize) {
+            message = `Ukuran ${formatFileSize(file.size)} melebihi batas ${formatFileSize(maxSize)}. Pilih berkas yang lebih kecil.`;
+        }
+        input.setCustomValidity(message);
+        input.setAttribute('aria-invalid', message ? 'true' : 'false');
+        dropzone.classList.remove('has-error');
+        dropzone.closest('.registration-upload-card')?.classList.remove('has-error');
+        dropzone.classList.toggle('is-invalid', Boolean(message));
+        dropzone.closest('.registration-upload-card')?.classList.toggle('is-invalid', Boolean(message));
+        if (feedback) {
+            feedback.textContent = message;
+            feedback.hidden = !message;
+        }
+        renderFile(message ? null : file);
+        if (message) {
+            dropzone.classList.remove('is-ready');
+            if (previewStatus) previewStatus.textContent = 'Perlu diganti';
+        }
+    });
     dropzone.addEventListener('dragover', event => {
         event.preventDefault();
         dropzone.classList.add('is-dragging');
@@ -121,69 +148,21 @@ document.querySelectorAll('.registration-form').forEach(form => form.addEventLis
     });
 }));
 
-document.querySelectorAll('[data-distance-calculator]').forEach(calculator => {
-    const button = calculator.querySelector('[data-distance-button]');
-    const latitudeInput = calculator.querySelector('[data-domicile-latitude]');
-    const longitudeInput = calculator.querySelector('[data-domicile-longitude]');
-    const status = calculator.querySelector('[data-distance-status]');
-    const schoolLatitude = Number(calculator.dataset.schoolLatitude);
-    const schoolLongitude = Number(calculator.dataset.schoolLongitude);
-
-    const distanceInKm = (fromLatitude, fromLongitude) => {
-        const radians = degrees => degrees * Math.PI / 180;
-        const latitudeDelta = radians(schoolLatitude - fromLatitude);
-        const longitudeDelta = radians(schoolLongitude - fromLongitude);
-        const firstLatitude = radians(fromLatitude);
-        const secondLatitude = radians(schoolLatitude);
-        const haversine = Math.sin(latitudeDelta / 2) ** 2
-            + Math.cos(firstLatitude) * Math.cos(secondLatitude) * Math.sin(longitudeDelta / 2) ** 2;
-        return 6371.0088 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+document.querySelectorAll('[data-province-select]').forEach(province => {
+    const regency = province.form?.querySelector('[data-regency-select]');
+    if (!regency) return;
+    const placeholder = regency.querySelector('option[value=""]');
+    const groups = Array.from(regency.querySelectorAll('optgroup'));
+    const updateRegencies = () => {
+        const previous = regency.value;
+        const selectedGroup = groups.find(group => group.dataset.province === province.value);
+        regency.replaceChildren(placeholder, ...(selectedGroup ? [selectedGroup] : []));
+        regency.value = Array.from(regency.options).some(option => option.value === previous) ? previous : '';
+        regency.disabled = !province.value;
+        placeholder.textContent = province.value ? 'Pilih kabupaten/kota' : 'Pilih provinsi terlebih dahulu';
     };
-    const showStatus = (message, state) => {
-        status.textContent = message;
-        status.classList.toggle('is-success', state === 'success');
-        status.classList.toggle('is-error', state === 'error');
-        status.classList.toggle('is-loading', state === 'loading');
-    };
-    const showDistance = (latitude, longitude) => {
-        const distance = distanceInKm(latitude, longitude);
-        showStatus(`Jarak domisili sekitar ${distance.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km dari sekolah.`, 'success');
-    };
-
-    if (latitudeInput?.value && longitudeInput?.value) {
-        showDistance(Number(latitudeInput.value), Number(longitudeInput.value));
-    }
-
-    button?.addEventListener('click', () => {
-        if (!navigator.geolocation) {
-            showStatus('Peramban ini tidak mendukung akses lokasi. Alamat tetap dapat diisi tanpa menghitung jarak.', 'error');
-            return;
-        }
-
-        const originalLabel = button.textContent;
-        button.disabled = true;
-        button.textContent = 'Mengambil lokasi…';
-        showStatus('Meminta lokasi perangkat. Izinkan akses lokasi pada peramban.', 'loading');
-
-        navigator.geolocation.getCurrentPosition(position => {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            latitudeInput.value = latitude.toFixed(7);
-            longitudeInput.value = longitude.toFixed(7);
-            showDistance(latitude, longitude);
-            button.disabled = false;
-            button.textContent = 'Hitung ulang lokasi';
-        }, error => {
-            const messages = {
-                1: 'Akses lokasi ditolak. Aktifkan izin lokasi bila ingin menghitung jarak.',
-                2: 'Lokasi belum dapat ditemukan. Coba lagi di tempat dengan sinyal yang lebih baik.',
-                3: 'Pengambilan lokasi terlalu lama. Silakan coba lagi.',
-            };
-            showStatus(messages[error.code] || 'Lokasi belum dapat diambil. Silakan coba lagi.', 'error');
-            button.disabled = false;
-            button.textContent = originalLabel;
-        }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 });
-    });
+    province.addEventListener('change', updateRegencies);
+    updateRegencies();
 });
 document.querySelectorAll('[data-confirm]').forEach(form => form.addEventListener('submit', event => {
     if (!window.confirm(form.dataset.confirm)) event.preventDefault();

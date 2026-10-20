@@ -104,7 +104,7 @@ class AdminController extends Controller
         return response()->streamDownload(function () use ($store) {
             $stream = fopen('php://output', 'w');
             fwrite($stream,"\xEF\xBB\xBF");
-            fputcsv($stream,['Nomor','Nama anak','Tanggal lahir','Nama orang tua','WhatsApp','Email','Alamat domisili','Jarak ke sekolah (km)','Status','Tanggal daftar'],',','"','');
+            fputcsv($stream,['Nomor','Nama anak','Tanggal lahir','Nama orang tua','WhatsApp','Email','Alamat domisili','Provinsi','Kode provinsi','Kabupaten/kota','Kode kabupaten/kota','Kecamatan','Desa/kelurahan','Kode pos','Status','Tanggal daftar'],',','"','');
             $cursor = null;
             do {
                 $page = $store->page('applications',$cursor,100);
@@ -112,7 +112,9 @@ class AdminController extends Controller
                     $cells = [
                         $row['reference'], $row['child']['child_name'], $row['child']['birth_date'],
                         $row['parent']['parent_name'], $row['parent']['phone'], $row['parent']['email'],
-                        $row['parent']['address'] ?? '', $row['parent']['domicile_distance_km'] ?? '',
+                        $row['parent']['address'] ?? '', $row['parent']['province'] ?? '', $row['parent']['province_code'] ?? '',
+                        $row['parent']['regency'] ?? '', $row['parent']['regency_code'] ?? '', $row['parent']['district'] ?? '',
+                        $row['parent']['village'] ?? '', $row['parent']['postal_code'] ?? '',
                         $row['status'], $row['created_at'],
                     ];
                     $cells = array_map(fn ($value) => preg_match('/^[\s]*[=+@\-\t\r]/u',(string)$value) ? "'".$value : $value,$cells);

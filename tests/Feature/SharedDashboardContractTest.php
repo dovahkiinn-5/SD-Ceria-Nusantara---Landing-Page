@@ -30,7 +30,7 @@ class SharedDashboardContractTest extends TestCase
         }
         return ['reference'=>'CN-2026-CONTRACT', 'token'=>'private-token', 'completed'=>3,
             'child'=>['child_name'=>'Anak kontrak','birth_date'=>'2019-04-10'],
-            'parent'=>['parent_name'=>'Wali kontrak','email'=>'wali@example.test'], 'documents'=>$documents];
+            'parent'=>['parent_name'=>'Wali kontrak','email'=>'wali@example.test','province_code'=>'19','province'=>'Kepulauan Bangka Belitung','regency_code'=>'19.71','regency'=>'Kota Pangkal Pinang','district'=>'Gerunggang','village'=>'Kacang Pedang','address'=>'Jl. Adhiyaksa No. 9'], 'documents'=>$documents];
     }
 
     public function test_transfer_is_stored_in_dashboard_fields_and_proof_is_private(): void

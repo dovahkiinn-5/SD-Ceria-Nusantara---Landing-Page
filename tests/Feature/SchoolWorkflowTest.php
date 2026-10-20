@@ -67,7 +67,7 @@ class SchoolWorkflowTest extends TestCase
 
     private function parentData(): array
     {
-        return ['parent_name'=>'Wali Uji','relationship'=>'Ibu','phone'=>'+6281234567890','email'=>'wali@example.test','address'=>'Alamat uji'];
+        return ['parent_name'=>'Wali Uji','relationship'=>'Ibu','phone'=>'+6281234567890','email'=>'wali@example.test','province_code'=>'19','regency_code'=>'19.71','district'=>'Gerunggang','village'=>'Kacang Pedang','address'=>'Jl. Adhiyaksa No. 9'];
     }
 
     private function completeDraft(): string
@@ -139,7 +139,12 @@ class SchoolWorkflowTest extends TestCase
             'family_card'=>UploadedFile::fake()->create('kk.pdf',1025,'application/pdf'),
             'child_identity_card'=>UploadedFile::fake()->create('kia.exe',10,'application/octet-stream'),
             'photo'=>UploadedFile::fake()->create('photo.svg',10,'image/svg+xml'),
-        ])->assertSessionHasErrors(['birth_certificate','family_card','child_identity_card','photo']);
+        ])->assertSessionHasErrors([
+            'birth_certificate',
+            'family_card' => 'Ukuran Kartu Keluarga melebihi 1 MB. Pilih berkas yang lebih kecil.',
+            'child_identity_card',
+            'photo',
+        ]);
         $this->assertSame([],app(FakeFirestoreFileStorage::class)->objects);
     }
 
@@ -158,15 +163,29 @@ class SchoolWorkflowTest extends TestCase
         $this->assertCount(4,app(FakeFirestoreFileStorage::class)->objects);
     }
 
-    public function test_school_coordinates_produce_zero_domicile_distance(): void
+    public function test_domicile_requires_complete_address_and_matching_region_codes(): void
     {
         $this->post('/pendaftaran/langkah/1',$this->child())->assertRedirect('/pendaftaran/2');
-        $this->post('/pendaftaran/langkah/2',$this->parentData()+[
-            'domicile_latitude'=>'-2.1256678',
-            'domicile_longitude'=>'106.1037412',
-        ])->assertRedirect('/pendaftaran/3');
+        $this->post('/pendaftaran/langkah/2',array_diff_key($this->parentData(),array_flip(['province_code','regency_code','district','village','address'])))
+            ->assertSessionHasErrors(['province_code','regency_code','district','village','address']);
+        $this->post('/pendaftaran/langkah/2',array_replace($this->parentData(),['regency_code'=>'32.73']))
+            ->assertSessionHasErrors('regency_code');
+        $this->post('/pendaftaran/langkah/2',$this->parentData())->assertRedirect('/pendaftaran/3');
+        $this->assertSame('Kepulauan Bangka Belitung',session('registration.parent.province'));
+        $this->assertSame('Kota Pangkal Pinang',session('registration.parent.regency'));
+        $this->assertArrayNotHasKey('domicile_distance_km',session('registration.parent'));
+    }
 
-        $this->assertSame(0.0,session('registration.parent.domicile_distance_km'));
+    public function test_older_draft_must_complete_address_before_submission(): void
+    {
+        $this->completeDraft();
+        $draft = session('registration');
+        unset($draft['parent']['province_code'], $draft['parent']['regency_code']);
+
+        $this->withSession(['registration' => $draft])
+            ->post('/pendaftaran/kirim', ['consent' => '1', 'payment_method' => 'offline'])
+            ->assertRedirect('/pendaftaran/2');
+        $this->assertSame(0, app(DocumentStore::class)->count('applications'));
     }
 
     public function test_public_media_is_served_from_firestore(): void

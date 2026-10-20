@@ -3,9 +3,7 @@
 @section('content')<a class="text-link" href="{{ route('admin.records',$collection) }}">← Kembali ke daftar</a><div class="admin-detail-grid"><section class="admin-panel">
 @if($collection==='applications')
 @foreach(['child'=>'Data anak','parent'=>'Data orang tua / wali'] as $key=>$label)<h2>{{ $label }}</h2><dl class="detail-list">@foreach($record[$key] as $field=>$value)@continue(in_array($field, ['domicile_latitude','domicile_longitude','domicile_distance_km'], true))<dt>{{ __('fields.'.$field) }}</dt><dd>{{ $value ?: '—' }}</dd>@endforeach
-@if($key==='parent' && isset($record['parent']['domicile_distance_km']))<dt>Jarak domisili ke sekolah</dt><dd>{{ number_format((float) $record['parent']['domicile_distance_km'], 2, ',', '.') }} km
-@if(isset($record['parent']['domicile_latitude'], $record['parent']['domicile_longitude'])) · <a class="text-link" href="https://www.google.com/maps/search/?api=1&query={{ $record['parent']['domicile_latitude'] }},{{ $record['parent']['domicile_longitude'] }}" target="_blank" rel="noopener">Lihat titik domisili</a>@endif
-</dd>@endif</dl>@endforeach
+</dl>@endforeach
 <h2>Berkas pendaftaran</h2><p>Dokumen terlampir pada pendaftaran {{ $record['reference'] }}. Unduh berkas untuk memeriksa data pendaftar.</p><div class="document-links">@foreach(['birth_certificate'=>'Akta kelahiran','family_card'=>'Kartu Keluarga','child_identity_card'=>'Kartu Identitas Anak (KIA)','photo'=>'Pas foto'] as $field=>$label)
 @if(isset($record['documents'][$field]))
 <div><a class="button secondary" href="{{ route('admin.document',[$record['id'],$field]) }}">↓ {{ $label }}</a>

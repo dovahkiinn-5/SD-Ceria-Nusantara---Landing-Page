@@ -26,7 +26,11 @@
         'Pilih hubungan':'Choose relationship', 'Ayah':'Father', 'Ibu':'Mother', 'Wali':'Guardian',
         'Nomor WhatsApp':'WhatsApp number', 'Alamat email':'Email address', 'Alamat domisili':'Home address',
         'Kontak darurat':'Emergency contact', 'Info tambahan':'Additional information',
-        'Jarak domisili ke sekolah':'Distance from home to school', 'Hitung dari lokasi saya':'Calculate from my location',
+        'Alamat tempat tinggal':'Home address', 'Provinsi':'Province', 'Kabupaten/kota':'Regency/city',
+        'Kecamatan':'District', 'Desa/kelurahan':'Village/subdistrict', 'Alamat lengkap':'Full address',
+        'Kode pos':'Postal code', 'Kontak cadangan':'Backup contact', 'Nomor kontak darurat':'Emergency contact number',
+        'Pilih provinsi':'Choose a province', 'Pilih provinsi terlebih dahulu':'Choose a province first',
+        'Pilih kabupaten/kota':'Choose a regency/city',
         'Akta kelahiran':'Birth certificate', 'Kartu Keluarga':'Family card', 'Pas foto anak':'Child’s photo',
         'Periksa & Kirim':'Review & Submit', 'Dokumen':'Documents', 'Pembayaran pendaftaran':'Registration payment',
         'Biaya pendaftaran':'Registration fee', 'Bayar langsung di sekolah':'Pay in person at school',
@@ -261,6 +265,7 @@
             themeButton.innerHTML = `<span aria-hidden="true">${dark ? '☀' : '☾'}</span>`;
             themeButton.title = dark ? 'Mode terang' : 'Mode gelap';
             themeButton.setAttribute('aria-label', dark ? 'Aktifkan mode terang' : 'Aktifkan mode gelap');
+            themeButton.setAttribute('aria-pressed', dark ? 'true' : 'false');
         }
     };
     let theme = 'light';

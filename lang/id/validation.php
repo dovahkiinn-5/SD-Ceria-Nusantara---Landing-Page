@@ -13,8 +13,8 @@ return [
     'attributes'=>[
         'child_name'=>'nama lengkap anak','nickname'=>'nama panggilan','birth_date'=>'tanggal lahir','gender'=>'jenis kelamin',
         'parent_name'=>'nama orang tua / wali','relationship'=>'hubungan dengan anak','phone'=>'nomor WhatsApp','email'=>'email',
-        'birth_certificate'=>'akta kelahiran','family_card'=>'Kartu Keluarga','child_identity_card'=>'Kartu Identitas Anak (KIA)','photo'=>'pas foto','consent'=>'kebijakan privasi',
-        'domicile_latitude'=>'lintang domisili','domicile_longitude'=>'bujur domisili',
+        'birth_certificate'=>'akta kelahiran','family_card'=>'Kartu Keluarga','child_identity_card'=>'Kartu Identitas Anak (KIA)','photo'=>'pas foto','payment_proof'=>'bukti pembayaran','consent'=>'kebijakan privasi',
+        'province_code'=>'provinsi','regency_code'=>'kabupaten/kota','district'=>'kecamatan','village'=>'desa/kelurahan','address'=>'alamat lengkap','postal_code'=>'kode pos',
         'name'=>'nama','date'=>'tanggal kunjungan','password'=>'kata sandi',
     ],
 ];

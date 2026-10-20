@@ -83,6 +83,22 @@ html[data-theme="dark"] .site-header {
     box-shadow: 0 4px 18px #0005;
 }
 
+html[data-theme="dark"] .site-header .brand>span {
+    color: #f0f7fb;
+}
+
+html[data-theme="dark"] .site-header .brand small {
+    color: #8fdcf0;
+}
+
+html[data-theme="dark"] .site-header .menu-toggle {
+    background: #294456;
+}
+
+html[data-theme="dark"] .site-header .menu-toggle span {
+    background: #b8e8f2;
+}
+
 html[data-theme="dark"] .tinted,
 html[data-theme="dark"] .hero,
 html[data-theme="dark"] .people-hero,
@@ -177,4 +193,9 @@ html[data-theme="dark"] .people-filters button.is-active {
 
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; }
+}
+
+html[data-theme="dark"] .site-header nav a:hover,
+html[data-theme="dark"] .site-header nav a[aria-current="page"] {
+    color: #8fdcf0;
 }
