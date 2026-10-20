@@ -24,7 +24,6 @@ class AnnouncementWorkflowTest extends TestCase
 
         $this->post('/pengumuman', [
             'reference' => 'CN-2026-ACCEPTED01',
-            'birth_date' => '2019-04-10',
         ])->assertOk()
             ->assertSee('LULUS')
             ->assertSee('Anak Diterima')
@@ -37,7 +36,6 @@ class AnnouncementWorkflowTest extends TestCase
 
         $this->post('/pengumuman', [
             'reference' => 'CN-2026-REJECTED01',
-            'birth_date' => '2019-04-10',
         ])->assertOk()
             ->assertSee('TIDAK LULUS')
             ->assertSee('Anak Ditolak')
@@ -53,7 +51,6 @@ class AnnouncementWorkflowTest extends TestCase
 
             $this->post('/pengumuman', [
                 'reference' => $reference,
-                'birth_date' => '2019-04-10',
             ])->assertOk()
                 ->assertSee('MASIH DIPROSES')
                 ->assertSee($name)
@@ -61,32 +58,41 @@ class AnnouncementWorkflowTest extends TestCase
         }
     }
 
-    public function test_wrong_reference_or_birth_date_returns_the_same_generic_error_without_leaking_data(): void
+    public function test_unknown_reference_returns_a_clear_error_without_leaking_data(): void
     {
         $reference = 'CN-2026-PRIVATE01';
         $privateName = 'Nama Anak Rahasia';
-        $genericError = 'Nomor pendaftaran atau tanggal lahir tidak cocok.';
+        $genericError = 'Nomor pendaftaran tidak ditemukan.';
         $this->storeApplication($reference, 'diterima', $privateName);
-
-        $wrongBirthDate = $this->followingRedirects()->post('/pengumuman', [
-            'reference' => $reference,
-            'birth_date' => '2018-01-01',
-        ]);
-
-        $wrongBirthDate->assertOk()
-            ->assertSee($genericError)
-            ->assertDontSee($privateName)
-            ->assertDontSee(self::GROUP_URL, false);
 
         $wrongReference = $this->followingRedirects()->post('/pengumuman', [
             'reference' => 'CN-2026-UNKNOWN01',
-            'birth_date' => '2019-04-10',
         ]);
 
         $wrongReference->assertOk()
             ->assertSee($genericError)
             ->assertDontSee($privateName)
             ->assertDontSee(self::GROUP_URL, false);
+    }
+
+    public function test_lookup_form_requires_only_registration_number(): void
+    {
+        $this->get('/pengumuman')->assertOk()
+            ->assertSee('name="reference"', false)
+            ->assertDontSee('name="birth_date"', false)
+            ->assertDontSee('tanggal lahir anak');
+
+        $this->post('/pengumuman', [])->assertSessionHasErrors('reference')
+            ->assertSessionDoesntHaveErrors('birth_date');
+    }
+
+    public function test_repeated_lookup_is_rate_limited(): void
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $this->post('/pengumuman', ['reference' => 'CN-2026-RATELIMIT'])->assertRedirect();
+        }
+
+        $this->post('/pengumuman', ['reference' => 'CN-2026-RATELIMIT'])->assertStatus(429);
     }
 
     private function storeApplication(string $reference, string $status, string $childName): void

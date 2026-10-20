@@ -105,6 +105,9 @@ class FirestoreRuntimeStoreTest extends TestCase
         $this->assertSame('0',$session->read($id));
         $this->travel(121)->seconds();
         $this->assertSame('',$another->read($id));
+        // FileSessionHandler::gc compares file mtime with native time(), which
+        // Laravel's test clock does not advance.
+        touch(config('session.files').DIRECTORY_SEPARATOR.$id, time() - 121);
         $this->assertSame(2,$session->gc(120)); // One Firestore record and its local fallback.
         $this->assertSame(0,$this->documents->count('runtime_sessions'));
         $this->assertFalse($session->write('../admins/owner','invalid'));

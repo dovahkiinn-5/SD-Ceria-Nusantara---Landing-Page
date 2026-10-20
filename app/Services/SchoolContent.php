@@ -37,7 +37,7 @@ class SchoolContent
         // A short, synchronous cache is predictable on both PHP-FPM and the
         // built-in local server. All Firestore documents are refreshed together
         // when it expires, so edits from another admin process appear quickly.
-        return $cache->remember($key, 5, fn () => $this->fetchPublishedContent($legacy));
+        return $cache->remember($key, 30, fn () => $this->fetchPublishedContent($legacy));
     }
 
     private function fetchPublishedContent(?array $legacy = null): array
@@ -152,14 +152,14 @@ class SchoolContent
         $cache->put($this->lastKnownKey($section), $data, now()->addDays(30));
 
         // Keep this process's published snapshot in sync too. Other web servers
-        // will refresh their own short cache from Firestore within five seconds.
+        // will refresh their own short cache from Firestore within 30 seconds.
         $published = $cache->get('school-content-last-known', $this->defaults());
         $published[$section] = $section === 'teachers'
             ? TeacherDirectory::withDefaults($data)
             : self::mergeDefaults($published[$section] ?? $this->defaults()[$section], $data);
         unset($published['home']['principal_name']);
         $cache->put('school-content-last-known', $published, now()->addDays(30));
-        $cache->put($key, $published, 5);
+        $cache->put($key, $published, 30);
     }
 
     public function editableFields(string $section, array $data): array

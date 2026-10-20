@@ -40,7 +40,7 @@ Daftar disimpan sebagai satu kesatuan, sehingga pemendekan tidak meninggalkan ka
 
 Deploy perubahan kedua repositori bersama, termasuk kelas kontrak dan resource default. Set `LANDING_PAGE_URL` pada dashboard ke URL HTTPS landing sebenarnya. Jangan memakai path folder Windows untuk menghubungkan dua aplikasi saat deploy.
 
-Landing membaca semua dokumen konten Firestore secara paralel dan menyimpan hasilnya maksimal 5 detik. Publikasi dashboard menulis ke dokumen `content/{section}`; landing mengambil versi terbaru pada permintaan berikutnya setelah cache singkat kedaluwarsa. Jika aplikasi berbagi cache lokal, pembatalan key `school-content-firestore` memperbaruinya langsung. Simpan draf saja tidak mengubah konten publik: selesaikan publikasi di `/admin/publikasi`. Jangan menyemai ulang koleksi atau menimpa konten yang sudah terbit.
+Landing membaca semua dokumen konten Firestore secara paralel dan menyimpan hasilnya maksimal 30 detik per instans. Halaman publik juga dapat di-cache di CDN selama 30 detik; setelah publikasi dashboard, perubahan bisa memerlukan sekitar satu menit untuk tampak di semua instans. Publikasi dashboard menulis ke dokumen `content/{section}`; landing mengambil versi terbaru pada permintaan berikutnya setelah cache kedaluwarsa. Jika aplikasi berbagi cache lokal, pembatalan key `school-content-firestore` memperbaruinya langsung. Simpan draf saja tidak mengubah konten publik: selesaikan publikasi di `/admin/publikasi`. Jangan menyemai ulang koleksi atau menimpa konten yang sudah terbit.
 
 ## Verifikasi
 

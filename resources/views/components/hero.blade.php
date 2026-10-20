@@ -18,11 +18,11 @@
                 ['src'=>$data['image'],'alt'=>'Siswa belajar bersama di kelas','caption'=>'Belajar bersama','source'=>null],
                 ['src'=>$data['classroom_image'] ?? '/assets/design/asset-04.png','alt'=>'Suasana ruang kelas SD Ceria Nusantara','caption'=>'Ruang belajar yang ceria','source'=>null],
             ] as $slide)
-            <img class="hero-slide @if($loop->first) is-active @endif" src="{{ $slide['src'] }}" alt="{{ $slide['alt'] }}" data-caption="{{ $slide['caption'] }}" data-concept="{{ $slide['concept'] ?? '' }}" @if($loop->first) fetchpriority="high" @else loading="lazy" @endif width="1672" height="1045" @if(!$loop->first) aria-hidden="true" @endif>
+            <img class="hero-slide @if($loop->first) is-active @endif" @if($loop->first) src="{{ \App\Support\PublicImage::url($slide['src']) }}" fetchpriority="high" @else data-src="{{ \App\Support\PublicImage::url($slide['src']) }}" aria-hidden="true" @endif alt="{{ $slide['alt'] }}" data-caption="{{ $slide['caption'] }}" data-concept="{{ $slide['concept'] ?? '' }}" width="1672" height="1045">
             @endforeach
         </div>
         @else
-        <img src="{{ $data['image'] }}" alt="{{ $contact ? 'Logo SD Ceria Nusantara' : 'Suasana belajar di SD Ceria Nusantara' }}" fetchpriority="high" width="1672" height="941">
+        <img src="{{ \App\Support\PublicImage::url($data['image']) }}" alt="{{ $contact ? 'Logo SD Ceria Nusantara' : 'Suasana belajar di SD Ceria Nusantara' }}" fetchpriority="high" width="1672" height="941">
         @endif
         @unless($contact)
             @if($home)

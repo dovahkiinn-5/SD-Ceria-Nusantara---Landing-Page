@@ -2,12 +2,12 @@
 
 // Fictional profiles only; not an actual staffing or curriculum commitment.
 $profiles = [
-    ['Ratna Puspitasari, M.Pd.', 'Kepala Sekolah', 'pimpinan', 'Memimpin sekolah dan memastikan pembelajaran, keamanan, serta kerja sama dengan keluarga berjalan baik.'],
-    ['Arif Pranata, M.Pd.', 'Wakil Kepala • Kurikulum', 'pimpinan', 'Mengoordinasikan jadwal, pendampingan guru, dan evaluasi pembelajaran anak.'],
-    ['Nadia Permatasari, M.Pd.', 'Wakil Kepala • Kesiswaan', 'pimpinan', 'Mendampingi kegiatan siswa, pembiasaan positif, dan komunikasi dengan keluarga.'],
-    ['Laila Ramadhani, S.Pd.', 'Wali Kelas 1', 'guru', 'Membantu anak beradaptasi, mengenal huruf dan angka, serta belajar mandiri.'],
-    ['Dimas Saputra, S.Pd.', 'Wali Kelas 2', 'guru', 'Menguatkan kemampuan membaca, berhitung, dan kebiasaan belajar yang menyenangkan.'],
-    ['Ayu Lestari, S.Pd.', 'Wali Kelas 3', 'guru', 'Mengembangkan rasa ingin tahu, kerja sama, dan keterampilan dasar anak.'],
+    ['Ratna Puspitasari, M.Pd.', 'Kepala Sekolah', 'pimpinan', 'Memimpin sekolah dan memastikan pembelajaran, keamanan, serta kerja sama dengan keluarga berjalan baik.', '/assets/design/teacher-1.png'],
+    ['Arif Pranata, M.Pd.', 'Wakil Kepala • Kurikulum', 'pimpinan', 'Mengoordinasikan jadwal, pendampingan guru, dan evaluasi pembelajaran anak.', '/assets/design/teacher-2.png'],
+    ['Nadia Permatasari, M.Pd.', 'Wakil Kepala • Kesiswaan', 'pimpinan', 'Mendampingi kegiatan siswa, pembiasaan positif, dan komunikasi dengan keluarga.', '/assets/design/teacher-3.png'],
+    ['Laila Ramadhani, S.Pd.', 'Wali Kelas 1', 'guru', 'Membantu anak beradaptasi, mengenal huruf dan angka, serta belajar mandiri.', '/assets/design/teacher-4.png'],
+    ['Dimas Saputra, S.Pd.', 'Wali Kelas 2', 'guru', 'Menguatkan kemampuan membaca, berhitung, dan kebiasaan belajar yang menyenangkan.', '/assets/design/teacher-5.png'],
+    ['Ayu Lestari, S.Pd.', 'Wali Kelas 3', 'guru', 'Mengembangkan rasa ingin tahu, kerja sama, dan keterampilan dasar anak.', '/assets/design/teacher-6.png'],
     ['Rizky Aditya, S.Pd.', 'Wali Kelas 4', 'guru', 'Mengajak anak berpikir kritis melalui eksplorasi, diskusi, dan proyek sederhana.'],
     ['Dewi Anggraini, S.Pd.', 'Wali Kelas 5', 'guru', 'Mengembangkan kemandirian, tanggung jawab, dan keberanian menyampaikan gagasan.'],
     ['Fajar Setiawan, S.Pd.', 'Wali Kelas 6', 'guru', 'Membimbing penguatan belajar dan kesiapan memasuki jenjang sekolah berikutnya.'],

@@ -80,7 +80,7 @@ class SharedDashboardContractTest extends TestCase
             app(DocumentStore::class)->put('content',$section,[...$content->defaults()[$section],$key=>$value]);
         }
         $this->assertNotSame('Beranda Sinkron',$content->all()['home']['title']);
-        $this->travel(6)->seconds();
+        $this->travel(31)->seconds();
         foreach (['/'=>'Beranda Sinkron','/tentang-kami'=>'Profil Sinkron','/program'=>'Program Sinkron',
             '/fasilitas'=>'Fasilitas Sinkron','/galeri'=>'Galeri Sinkron','/kontak'=>'Kontak Sinkron','/guru-staf'=>'Guru Sinkron'] as $url=>$text) {
             $this->get($url)->assertOk()->assertSee($text)->assertSee('Sekolah Sinkron');
@@ -105,7 +105,7 @@ class SharedDashboardContractTest extends TestCase
             'reference'=>'CN-2026-CONTRACT','child'=>['child_name'=>'Anak','birth_date'=>'2019-04-10'],
             'status'=>'perlu_perbaikan','admin_notes'=>'Unggah ulang KK yang jelas.',
         ]);
-        $this->post('/pengumuman',['reference'=>'CN-2026-CONTRACT','birth_date'=>'2019-04-10'])->assertOk()
+        $this->post('/pengumuman',['reference'=>'CN-2026-CONTRACT'])->assertOk()
             ->assertSee('PERLU PERBAIKAN')->assertSee('Unggah ulang KK yang jelas.')->assertDontSee('TIDAK LULUS');
     }
 }

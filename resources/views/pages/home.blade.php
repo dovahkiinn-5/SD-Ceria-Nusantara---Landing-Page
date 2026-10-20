@@ -8,7 +8,7 @@
     <x-heading eyebrow="PROFIL SEKOLAH" :title="$site['home']['profile_title']" :subtitle="$site['home']['profile_subtitle']"/>
     <p class="profile-text desktop-only">{{ $site['home']['profile_text'] }}</p><p class="profile-text tablet-only">{{ $site['home']['tablet']['profile_text'] }}</p><div class="center profile-action"><a class="button blue" href="{{ route('about') }}">Kenali Sekolah Kami</a></div>
     <x-cards :items="$site['home']['values']" class="value-cards"/>
-    <div class="tablet-only classroom-block"><x-heading eyebrow="KESEHARIAN" title="Belajar dengan rasa ingin tahu"/><img src="{{ $site['settings']['classroom_image'] }}" alt="Ruang belajar yang ceria" width="1672" height="941" loading="lazy"></div>
+    <div class="tablet-only classroom-block"><x-heading eyebrow="KESEHARIAN" title="Belajar dengan rasa ingin tahu"/><img src="{{ \App\Support\PublicImage::url($site['settings']['classroom_image']) }}" alt="Ruang belajar yang ceria" width="1672" height="941" loading="lazy"></div>
 </div></section>
 <section class="section tinted home-advantages"><div class="container"><x-heading eyebrow="MENGAPA MEMILIH KAMI" tablet-eyebrow="MENGAPA KAMI" title="Mendampingi setiap langkah kecil" subtitle="Keunggulan yang terasa dalam pengalaman belajar sehari-hari."/>
 <div class="advantage-grid desktop-only">@foreach($site['home']['advantages'] as $item)<article class="advantage-card"><span class="number-circle">{{ str_pad($loop->iteration,2,'0',STR_PAD_LEFT) }}</span><div><h3>{{ $item['title'] }}</h3><p>{{ $item['text'] }}</p></div></article>@endforeach</div><div class="tablet-only"><x-cards :items="$site['home']['tablet']['advantages']"/></div></div></section>

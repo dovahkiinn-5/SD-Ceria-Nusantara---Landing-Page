@@ -261,8 +261,23 @@ if (heroSlider) {
     const slides = [...heroSlider.querySelectorAll('.hero-slide')];
     let activeIndex = Math.max(0, slides.findIndex(slide => slide.classList.contains('is-active')));
     let timer;
+    let switching = false;
 
-    const showSlide = index => {
+    const showSlide = async index => {
+        if (switching) return;
+        switching = true;
+        const next = slides[(index + slides.length) % slides.length];
+        if (!next.src && next.dataset.src) next.src = next.dataset.src;
+        try {
+            await next.decode();
+        } catch {
+            switching = false;
+            return;
+        }
+        if (document.hidden) {
+            switching = false;
+            return;
+        }
         activeIndex = (index + slides.length) % slides.length;
         slides.forEach((slide, slideIndex) => {
             const active = slideIndex === activeIndex;
@@ -273,6 +288,7 @@ if (heroSlider) {
         if (caption) caption.textContent = slides[activeIndex].dataset.caption;
         const conceptNote = heroSlider.querySelector('[data-hero-note]');
         if (conceptNote) conceptNote.hidden = !slides[activeIndex].dataset.concept;
+        switching = false;
     };
     const conceptNote = heroSlider.querySelector('[data-hero-note]');
     if (conceptNote) conceptNote.hidden = !slides[activeIndex].dataset.concept;

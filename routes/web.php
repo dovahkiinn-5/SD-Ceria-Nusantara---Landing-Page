@@ -6,11 +6,29 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\VisitController;
 use App\Services\FirestoreFileStorage;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 foreach (['home'=>'','about'=>'tentang-kami','program'=>'program','facilities'=>'fasilitas','teachers'=>'guru-staf','gallery'=>'galeri','contact'=>'kontak','privacy'=>'privasi','terms'=>'syarat-ketentuan'] as $page=>$path) {
-    Route::get('/'.$path,[PageController::class,'show'])->defaults('page',$page)->name($page);
+    $route = Route::get('/'.$path,[PageController::class,'show'])->defaults('page',$page);
+    if ($page !== 'contact') {
+        $route->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, ValidateCsrfToken::class]);
+    }
+    $route->name($page);
 }
+Route::get('/sitemap.xml', function () {
+    $urls = array_map(fn (string $name) => route($name), [
+        'home', 'about', 'program', 'facilities', 'teachers', 'gallery', 'contact', 'privacy', 'terms',
+    ]);
+    return response()->view('seo.sitemap', ['urls' => $urls], 200, ['Content-Type' => 'application/xml; charset=UTF-8']);
+})->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, ValidateCsrfToken::class])->name('sitemap');
+Route::get('/robots.txt', fn () => response(
+    "User-agent: *\nDisallow: /admin/\nDisallow: /pendaftaran/\nDisallow: /pengumuman\nDisallow: /kunjungan/\nSitemap: ".route('sitemap')."\n",
+    200,
+    ['Content-Type' => 'text/plain; charset=UTF-8']
+))->withoutMiddleware([StartSession::class, ShareErrorsFromSession::class, ValidateCsrfToken::class])->name('robots');
 Route::get('/media/{filename}', function (string $filename, FirestoreFileStorage $storage) {
     abort_unless(preg_match('/^[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)$/',$filename),404);
     $image = $storage->get('media/'.$filename);

@@ -27,8 +27,9 @@ $setDefaultEnvironmentValue = static function (string $key, string $value): void
 
 $temporaryDirectory = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.'laravel';
 $compiledViewsDirectory = $temporaryDirectory.DIRECTORY_SEPARATOR.'views';
+$cacheDirectory = $temporaryDirectory.DIRECTORY_SEPARATOR.'cache';
 
-foreach ([$temporaryDirectory, $compiledViewsDirectory] as $directory) {
+foreach ([$temporaryDirectory, $compiledViewsDirectory, $cacheDirectory] as $directory) {
     if (! is_dir($directory) && ! mkdir($directory, 0755, true) && ! is_dir($directory)) {
         throw new RuntimeException('Tidak dapat menyiapkan direktori sementara Laravel.');
     }
@@ -50,6 +51,7 @@ $productionDefaults = [
     'APP_ROUTES_CACHE' => $temporaryDirectory.DIRECTORY_SEPARATOR.'routes.php',
     'APP_SERVICES_CACHE' => $temporaryDirectory.DIRECTORY_SEPARATOR.'services.php',
     'VIEW_COMPILED_PATH' => $compiledViewsDirectory,
+    'CACHE_FILE_PATH' => $cacheDirectory,
 ];
 
 foreach ($productionDefaults as $key => $value) {

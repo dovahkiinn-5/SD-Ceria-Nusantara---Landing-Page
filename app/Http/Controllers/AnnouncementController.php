@@ -19,13 +19,10 @@ class AnnouncementController extends Controller
         $reference = mb_strtoupper(trim((string) $request->input('reference')));
         $validator = Validator::make([
             'reference' => $reference,
-            'birth_date' => $request->input('birth_date'),
         ], [
             'reference' => ['required', 'string', 'max:40', 'regex:/^CN-[A-Z0-9-]+$/'],
-            'birth_date' => ['required', 'date_format:Y-m-d', 'before:today'],
         ], [
             'reference.regex' => 'Format nomor pendaftaran tidak sesuai.',
-            'birth_date.date_format' => 'Format tanggal lahir tidak sesuai.',
         ]);
 
         if ($validator->fails()) {
@@ -37,12 +34,10 @@ class AnnouncementController extends Controller
         }
 
         $record = $store->get('applications', $reference);
-        $storedBirthDate = (string) ($record['child']['birth_date'] ?? '');
-
-        if (! $record || $storedBirthDate === '' || ! hash_equals($storedBirthDate, (string) $request->input('birth_date'))) {
+        if (! $record) {
             return $this->noStore(
                 redirect()->route('announcement')
-                    ->withErrors(['reference' => 'Nomor pendaftaran atau tanggal lahir tidak cocok.'])
+                    ->withErrors(['reference' => 'Nomor pendaftaran tidak ditemukan. Periksa kembali nomor Anda.'])
                     ->withInput(['reference' => $reference]),
             );
         }
